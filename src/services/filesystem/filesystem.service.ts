@@ -25,8 +25,60 @@ export interface ResourceFileReadResult {
   content: string;
 }
 
+export interface SearchFilesOptions {
+  limit: number;
+  includeGlob?: string;
+  excludeGlob?: string;
+}
+
+export interface GrepContentOptions {
+  limit: number;
+  includeGlob?: string;
+  excludeGlob?: string;
+  maxFileSizeBytes: number;
+  concurrency: number;
+}
+
+interface CachedFileList {
+  files: string[];
+  expiresAt: number;
+}
+
+const DEFAULT_IGNORE_GLOBS = [
+  "**/.git/**",
+  "**/node_modules/**",
+  "**/dist/**",
+  "**/build/**",
+  "**/coverage/**",
+  "**/.next/**",
+  "**/out/**",
+  "**/.pnpm-store/**",
+  "**/.turbo/**"
+];
+
+const FILE_LIST_CACHE_TTL_MS = 5000;
+
 export class FileSystemService {
+  private readonly fileListCache = new Map<string, CachedFileList>();
+
   constructor(private readonly pathGuard: PathGuard) {}
+
+  private async listProjectFiles(project: ProjectMetadata, includeGlob: string, excludeGlob?: string): Promise<string[]> {
+    const cacheKey = createCacheKey(project.absolute_path, includeGlob, excludeGlob);
+    const now = Date.now();
+    const cached = this.fileListCache.get(cacheKey);
+    if (cached && cached.expiresAt > now) {
+      return cached.files;
+    }
+
+    const files = await listFiles(project.absolute_path, includeGlob, excludeGlob);
+    this.fileListCache.set(cacheKey, {
+      files,
+      expiresAt: now + FILE_LIST_CACHE_TTL_MS
+    });
+
+    return files;
+  }
 
   readFileForResource(project: ProjectMetadata, relativePath: string, maxBytes: number): ResourceFileReadResult {
     const target = this.pathGuard.resolve(project.absolute_path, relativePath);
@@ -189,43 +241,91 @@ export class FileSystemService {
     return { source_path: sourcePath, target_path: targetPath };
   }
 
-  searchFiles(project: ProjectMetadata, query: string) {
-    return fg.sync([`**/*${query}*`], {
-      cwd: project.absolute_path,
-      dot: true,
-      onlyFiles: false
-    });
+  async searchFiles(project: ProjectMetadata, query: string, options: SearchFilesOptions) {
+    const include = options.includeGlob || "**/*";
+    const files = await this.listProjectFiles(project, include, options.excludeGlob);
+
+    const needle = query.toLowerCase();
+    const matches = files
+      .filter((relative) => relative.toLowerCase().includes(needle))
+      .slice(0, options.limit);
+
+    return {
+      matches,
+      has_more: files.length > matches.length
+    };
   }
 
-  grepContent(
+  async grepContent(
     project: ProjectMetadata,
     pattern: string,
-    includeGlob?: string,
-    excludeGlob?: string
-  ): Array<{ path: string; line: number; snippet: string }> {
-    const include = includeGlob || "**/*";
-    const files = fg.sync([include], {
-      cwd: project.absolute_path,
-      onlyFiles: true,
-      dot: true,
-      ignore: excludeGlob ? [excludeGlob] : undefined
-    });
+    options: GrepContentOptions
+  ): Promise<{
+    matches: Array<{ path: string; line: number; snippet: string }>;
+    has_more: boolean;
+    scanned_files: number;
+    skipped_files: number;
+  }> {
+    const include = options.includeGlob || "**/*";
+    const files = await this.listProjectFiles(project, include, options.excludeGlob);
 
     const regex = new RegExp(pattern, "i");
     const matches: Array<{ path: string; line: number; snippet: string }> = [];
+    let scannedFiles = 0;
+    let skippedFiles = 0;
+    let reachedLimit = false;
 
-    for (const relative of files) {
+    await runWithConcurrency(files, options.concurrency, async (relative) => {
+      if (reachedLimit) {
+        return;
+      }
+
       const absolute = path.join(project.absolute_path, relative);
-      const content = fs.readFileSync(absolute, "utf8");
-      const lines = content.split(/\r?\n/);
-      lines.forEach((line, index) => {
-        if (regex.test(line)) {
-          matches.push({ path: relative, line: index + 1, snippet: line.trim() });
-        }
-      });
-    }
+      const stat = await fs.promises.stat(absolute);
+      if (!stat.isFile()) {
+        skippedFiles += 1;
+        return;
+      }
 
-    return matches;
+      if (stat.size > options.maxFileSizeBytes) {
+        skippedFiles += 1;
+        return;
+      }
+
+      const buffer = await fs.promises.readFile(absolute);
+      if (detectBinary(buffer.subarray(0, 1024))) {
+        skippedFiles += 1;
+        return;
+      }
+
+      scannedFiles += 1;
+      const lines = buffer.toString("utf8").split(/\r?\n/);
+      for (let index = 0; index < lines.length; index += 1) {
+        const line = lines[index] ?? "";
+        regex.lastIndex = 0;
+        if (regex.test(line)) {
+          if (matches.length >= options.limit) {
+            reachedLimit = true;
+            break;
+          }
+
+          matches.push({ path: relative, line: index + 1, snippet: line.trim() });
+          if (matches.length >= options.limit) {
+            reachedLimit = true;
+            break;
+          }
+        }
+      }
+    });
+
+    const limitedMatches = matches.slice(0, options.limit);
+
+    return {
+      matches: limitedMatches,
+      has_more: reachedLimit || matches.length > limitedMatches.length,
+      scanned_files: scannedFiles,
+      skipped_files: skippedFiles
+    };
   }
 
   getProjectTree(project: ProjectMetadata, maxDepth = 3) {
@@ -261,6 +361,56 @@ export class FileSystemService {
 
     return walk(project.absolute_path, 0);
   }
+}
+
+async function runWithConcurrency<T>(items: T[], concurrency: number, task: (item: T) => Promise<void>): Promise<void> {
+  const workerCount = Math.max(1, concurrency);
+  let index = 0;
+
+  const workers = Array.from({ length: workerCount }, async () => {
+    for (;;) {
+      const current = index;
+      index += 1;
+      if (current >= items.length) {
+        return;
+      }
+
+      await task(items[current] as T);
+    }
+  });
+
+  await Promise.all(workers);
+}
+
+function normalizeIgnoreGlobs(excludeGlob?: string): string[] {
+  const custom = excludeGlob
+    ? excludeGlob
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean)
+    : [];
+
+  return [...DEFAULT_IGNORE_GLOBS, ...custom];
+}
+
+function createCacheKey(root: string, includeGlob: string, excludeGlob?: string): string {
+  return [root, includeGlob, excludeGlob ?? ""].join("|");
+}
+
+async function listFiles(
+  root: string,
+  includeGlob: string,
+  excludeGlob?: string
+): Promise<string[]> {
+  return await fg([includeGlob], {
+    cwd: root,
+    onlyFiles: true,
+    dot: true,
+    ignore: normalizeIgnoreGlobs(excludeGlob),
+    unique: true,
+    followSymbolicLinks: false,
+    markDirectories: false
+  });
 }
 
 function detectBinary(buffer: Buffer): boolean {

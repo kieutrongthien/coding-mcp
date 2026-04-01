@@ -10,7 +10,11 @@ export function registerSearchTools(server: any, services: AppServices): void {
       const args = searchFilesSchema.parse(rawArgs);
       return await executeOperation(services, "search_files", async () => {
         const project = services.projectRegistry.getProject(args.project_id);
-        return { matches: services.filesystem.searchFiles(project, args.query) };
+        return await services.filesystem.searchFiles(project, args.query, {
+          limit: args.limit,
+          includeGlob: args.include_glob,
+          excludeGlob: args.exclude_glob
+        });
       }, args.project_id);
     }
   );
@@ -22,9 +26,13 @@ export function registerSearchTools(server: any, services: AppServices): void {
       const args = grepContentSchema.parse(rawArgs);
       return await executeOperation(services, "grep_content", async () => {
         const project = services.projectRegistry.getProject(args.project_id);
-        return {
-          matches: services.filesystem.grepContent(project, args.pattern, args.include_glob, args.exclude_glob)
-        };
+        return await services.filesystem.grepContent(project, args.pattern, {
+          limit: args.limit,
+          includeGlob: args.include_glob,
+          excludeGlob: args.exclude_glob,
+          maxFileSizeBytes: args.max_file_size_bytes,
+          concurrency: args.concurrency
+        });
       }, args.project_id);
     }
   );
