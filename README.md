@@ -5,10 +5,10 @@ Production-ready, multi-project MCP server for coding agents.
 `coding-mcp` is designed for remote and local agent workflows where many repositories are managed under one or more root folders (for example `/projects`, `/srv/repos`). It provides safe filesystem and git automation, consistent MCP contracts, and hardened HTTP deployment controls.
 
 ## Documentation
-- Quickstart: [https://kieutrongthien.github.io/coding-mcp](https://kieutrongthien.github.io/coding-mcp)
-- API Reference: [https://kieutrongthien.github.io/coding-mcp/api-reference](https://kieutrongthien.github.io/coding-mcp/api-reference)
-- Source Code Analysis: [https://kieutrongthien.github.io/coding-mcp/architecture/source-code-analysis](https://kieutrongthien.github.io/coding-mcp/architecture/source-code-analysis)
-- CLI and Registry Guide: [https://kieutrongthien.github.io/coding-mcp/guides/cli-and-registry](https://kieutrongthien.github.io/coding-mcp/guides/cli-and-registry)
+- Quickstart: [https://coding-mcp.omaicode.com](https://coding-mcp.omaicode.com)
+- API Reference: [https://coding-mcp.omaicode.com/api-reference](https://coding-mcp.omaicode.com/api-reference)
+- Source Code Analysis: [https://coding-mcp.omaicode.com/architecture/source-code-analysis](https://coding-mcp.omaicode.com/architecture/source-code-analysis)
+- CLI and Registry Guide: [https://coding-mcp.omaicode.com/guides/cli-and-registry](https://coding-mcp.omaicode.com/guides/cli-and-registry)
 
 ## Highlights
 
