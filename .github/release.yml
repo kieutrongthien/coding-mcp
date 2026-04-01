@@ -1,0 +1,11 @@
+changelog:
+  categories:
+    - title: "What's new"
+      labels:
+        - "feature"
+        - "enhancement"
+        - "breaking-change"
+        - "feat"
+    - title: "What's Changed"
+      labels:
+        - "*"

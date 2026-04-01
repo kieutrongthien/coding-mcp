@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -32,9 +34,61 @@ jobs:
       - name: Pack npm tarball
         run: npm pack
 
+      - name: Generate release notes from commit prefixes
+        id: notes
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          current_tag="${GITHUB_REF_NAME}"
+          previous_tag="$(git tag --sort=-creatordate | grep -Fxv "$current_tag" | head -n 1 || true)"
+
+          if [[ -n "$previous_tag" ]]; then
+            range="${previous_tag}..${current_tag}"
+          else
+            range="${current_tag}"
+          fi
+
+          mapfile -t commits < <(git log "$range" --pretty=format:'%s')
+
+          whats_new=()
+          whats_changed=()
+
+          for subject in "${commits[@]}"; do
+            [[ -z "$subject" ]] && continue
+
+            if [[ "$subject" =~ ^(feat|enhancement|breaking-change)(\([^)]*\))?(!)?:[[:space:]]+ ]]; then
+              whats_new+=("$subject")
+            else
+              whats_changed+=("$subject")
+            fi
+          done
+
+          {
+            echo "## What's new"
+            if [[ ${#whats_new[@]} -eq 0 ]]; then
+              echo "- No entries"
+            else
+              for line in "${whats_new[@]}"; do
+                echo "- $line"
+              done
+            fi
+
+            echo
+            echo "## What's changed"
+            if [[ ${#whats_changed[@]} -eq 0 ]]; then
+              echo "- No entries"
+            else
+              for line in "${whats_changed[@]}"; do
+                echo "- $line"
+              done
+            fi
+          } > RELEASE_NOTES.md
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
+          generate_release_notes: false
+          body_path: RELEASE_NOTES.md
           files: |
             *.tgz
