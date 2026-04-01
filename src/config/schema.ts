@@ -35,6 +35,7 @@ export const appConfigSchema = z
     logLevel: z.string().default("info"),
     registryFile: z.string().default(path.join(defaultDataDir, "registry.json")),
     auditLogFile: z.string().default(path.join(defaultDataDir, "audit.log")),
+    httpRequestLogFile: z.string().default(path.join(defaultDataDir, "http-requests.log")),
     debugMode: z.boolean().default(false)
   })
   .superRefine((value, ctx) => {

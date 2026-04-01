@@ -39,6 +39,7 @@ export function loadConfig(configPath?: string, overrides?: ConfigOverrides): Ap
     logLevel: process.env.LOG_LEVEL,
     registryFile: process.env.REGISTRY_FILE,
     auditLogFile: process.env.AUDIT_LOG_FILE,
+    httpRequestLogFile: process.env.HTTP_REQUEST_LOG_FILE,
     debugMode: parseBoolean(process.env.DEBUG_MODE)
   };
 
@@ -65,7 +66,8 @@ export function loadConfig(configPath?: string, overrides?: ConfigOverrides): Ap
     ...normalized,
     projectsRoots: normalized.projectsRoots.map((entry) => normalizeUserPath(entry)),
     registryFile: normalizeUserPath(normalized.registryFile),
-    auditLogFile: normalizeUserPath(normalized.auditLogFile)
+    auditLogFile: normalizeUserPath(normalized.auditLogFile),
+    httpRequestLogFile: normalizeUserPath(normalized.httpRequestLogFile)
   };
 }
 

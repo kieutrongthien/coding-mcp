@@ -16,7 +16,7 @@ Use `.env`, environment variables, or `MCP_CONFIG_PATH` with a JSON/YAML file.
 - `ALLOWED_COMMANDS`
 - `PROTECTED_PATHS`
 - `LOG_LEVEL`
-- `REGISTRY_FILE`, `AUDIT_LOG_FILE`
+- `REGISTRY_FILE`, `AUDIT_LOG_FILE`, `HTTP_REQUEST_LOG_FILE`
 
 ## Cross-platform paths
 
@@ -39,6 +39,7 @@ PROTECTED_PATHS=.git,.env,.env.local,.env.production
 LOG_LEVEL=info
 REGISTRY_FILE=~/.coding-mcp/registry.json
 AUDIT_LOG_FILE=~/.coding-mcp/audit.log
+HTTP_REQUEST_LOG_FILE=~/.coding-mcp/http-requests.log
 ```
 
 ## Config file usage

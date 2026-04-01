@@ -1,5 +1,7 @@
 import { createServer } from "node:http";
 import crypto from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
 import type { AppServices } from "./bootstrap.js";
 import { createMcpServer } from "../mcp/server.js";
 import { runWithAuthContext } from "../services/auth/auth-context.js";
@@ -15,8 +17,45 @@ export async function startHttpServer(services: AppServices): Promise<void> {
   const transport = await createTransportByMode(services.config.httpMode);
 
   await server.connect(transport);
+  ensureParentDir(services.config.httpRequestLogFile);
 
   const httpServer = createServer(async (req, res) => {
+    const requestId = crypto.randomUUID();
+    const requestStartedAt = Date.now();
+    const requestPath = req.url ?? "";
+    const requestMethod = req.method ?? "";
+
+    services.logger.info({ request_id: requestId, method: requestMethod, path: requestPath }, "HTTP request received");
+
+    res.once("finish", () => {
+      const durationMs = Date.now() - requestStartedAt;
+      services.logger.info(
+        {
+          request_id: requestId,
+          method: requestMethod,
+          path: requestPath,
+          status_code: res.statusCode,
+          duration_ms: durationMs
+        },
+        "HTTP request responded"
+      );
+
+      appendHttpRequestLog(services, {
+        timestamp: new Date().toISOString(),
+        request_id: requestId,
+        method: requestMethod,
+        path: requestPath,
+        status_code: res.statusCode,
+        duration_ms: durationMs,
+        http_version: req.httpVersion,
+        remote_address: req.socket.remoteAddress,
+        remote_port: req.socket.remotePort,
+        user_agent: req.headers["user-agent"],
+        request_headers: req.headers,
+        response_headers: res.getHeaders()
+      });
+    });
+
     try {
       const auth = services.authz.authenticateHttpRequest(req.headers);
       await services.telemetry.runInSpan(
@@ -66,6 +105,21 @@ export async function startHttpServer(services: AppServices): Promise<void> {
       resolve();
     });
   });
+}
+
+function appendHttpRequestLog(
+  services: AppServices,
+  payload: Record<string, unknown>
+): void {
+  fs.appendFile(services.config.httpRequestLogFile, `${JSON.stringify(payload)}\n`, "utf8", (error) => {
+    if (error) {
+      services.logger.warn({ error }, "Failed to append HTTP request log");
+    }
+  });
+}
+
+function ensureParentDir(filePath: string): void {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
 }
 
 async function createTransportByMode(mode: "streamable" | "sse"): Promise<any> {
