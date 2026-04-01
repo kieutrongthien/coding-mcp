@@ -25,7 +25,13 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsx src/main/cli.ts",
+    "dev:serve": "tsx src/main/cli.ts serve",
+    "dev:http": "tsx src/main/cli.ts serve --transport http",
+    "dev:stdio": "tsx src/main/cli.ts serve --transport stdio",
     "start": "node dist/src/main/cli.js",
+    "start:serve": "node dist/src/main/cli.js serve",
+    "start:http": "node dist/src/main/cli.js serve --transport http",
+    "start:stdio": "node dist/src/main/cli.js serve --transport stdio",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
