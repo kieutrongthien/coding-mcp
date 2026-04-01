@@ -22,7 +22,7 @@ npm run build
 
 ## Branch and Commit Guidelines
 
-- Create branches from `main`
+- Create branches from `master`
 - Use descriptive branch names, for example: `feat/multi-root-indexing`
 - Prefer small, focused pull requests
 - Use clear commit messages; conventional commits are recommended

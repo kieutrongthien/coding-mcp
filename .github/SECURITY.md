@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-Security updates are provided for the latest `main` branch and the latest tagged release.
+Security updates are provided for the latest `master` branch and the latest tagged release.
 
 ## Reporting a Vulnerability
 
