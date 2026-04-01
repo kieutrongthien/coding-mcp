@@ -5,22 +5,22 @@ import { executeOperation } from "./tool-helpers.js";
 import { buildCommandCandidates, type CommandOperation } from "../../services/commands/language-commands.js";
 
 export function registerCommandTools(server: any, services: AppServices): void {
-  server.registerTool("run_build", { inputSchema: runBuildSchema.shape }, async (rawArgs: unknown) => {
+  server.registerTool("run_build", { description: "Run project build command", inputSchema: runBuildSchema.shape }, async (rawArgs: unknown) => {
     const args = runBuildSchema.parse(rawArgs);
     return await runAlias(services, args.project_id, "run_build");
   });
 
-  server.registerTool("run_test", { inputSchema: runTestSchema.shape }, async (rawArgs: unknown) => {
+  server.registerTool("run_test", { description: "Run project test command", inputSchema: runTestSchema.shape }, async (rawArgs: unknown) => {
     const args = runTestSchema.parse(rawArgs);
     return await runAlias(services, args.project_id, "run_test");
   });
 
-  server.registerTool("run_lint", { inputSchema: runLintSchema.shape }, async (rawArgs: unknown) => {
+  server.registerTool("run_lint", { description: "Run project lint command", inputSchema: runLintSchema.shape }, async (rawArgs: unknown) => {
     const args = runLintSchema.parse(rawArgs);
     return await runAlias(services, args.project_id, "run_lint");
   });
 
-  server.registerTool("run_command_safe", { inputSchema: runCommandSafeSchema.shape }, async (rawArgs: unknown) => {
+  server.registerTool("run_command_safe", { description: "Run an allowlisted command safely", inputSchema: runCommandSafeSchema.shape }, async (rawArgs: unknown) => {
     const args = runCommandSafeSchema.parse(rawArgs);
     return await executeOperation(services, "run_command_safe", async () => {
       const project = services.projectRegistry.getProject(args.project_id);
