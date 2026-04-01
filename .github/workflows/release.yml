@@ -53,9 +53,14 @@ jobs:
 
           whats_new=()
           whats_changed=()
+          declare -A seen_subjects=()
 
           for subject in "${commits[@]}"; do
             [[ -z "$subject" ]] && continue
+            if [[ -n "${seen_subjects[$subject]:-}" ]]; then
+              continue
+            fi
+            seen_subjects[$subject]=1
 
             if [[ "$subject" =~ ^(feat|enhancement|breaking-change)(\([^)]*\))?(!)?:[[:space:]]+ ]]; then
               whats_new+=("$subject")
