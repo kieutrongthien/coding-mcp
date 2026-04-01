@@ -2,6 +2,14 @@ import { describe, expect, it } from "vitest";
 import { loadConfig } from "../../src/config/load-config.js";
 
 describe("OpenTelemetry config parsing", () => {
+  it("defaults projectsRoots to cwd when env is unset", () => {
+    delete process.env.PROJECTS_ROOTS;
+    delete process.env.PROJECTS_ROOT;
+
+    const config = loadConfig();
+    expect(config.projectsRoots).toEqual([process.cwd()]);
+  });
+
   it("parses OTEL headers from env", () => {
     process.env.PROJECTS_ROOTS = process.cwd();
     process.env.ENABLE_OTEL = "true";

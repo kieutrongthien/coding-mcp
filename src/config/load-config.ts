@@ -48,6 +48,11 @@ export function loadConfig(configPath?: string, overrides?: ConfigOverrides): Ap
     ...removeUndefined(overrides ?? {})
   };
 
+  // Make CLI usable out of the box by defaulting to the current working directory.
+  if (!("projectsRoots" in merged) || !Array.isArray(merged.projectsRoots) || merged.projectsRoots.length === 0) {
+    Object.assign(merged, { projectsRoots: [process.cwd()] });
+  }
+
   const parsed = appConfigSchema.safeParse(merged);
   if (!parsed.success) {
     throw new ValidationError("Invalid configuration", {
