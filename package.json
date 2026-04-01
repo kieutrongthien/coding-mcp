@@ -33,6 +33,7 @@
     "start:http": "node dist/src/main/cli.js serve --transport http",
     "start:stdio": "node dist/src/main/cli.js serve --transport stdio",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.json --noEmit"
@@ -56,6 +57,7 @@
     "@eslint/js": "^9.39.4",
     "@types/mime-types": "^2.1.4",
     "@types/node": "^22.15.17",
+    "@vitest/coverage-v8": "^3.2.4",
     "eslint": "^9.26.0",
     "globals": "^17.4.0",
     "tsx": "^4.19.4",
