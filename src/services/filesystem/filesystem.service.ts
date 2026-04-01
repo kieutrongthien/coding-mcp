@@ -13,8 +13,44 @@ export interface ReadFileOptions {
   maxFileSize: number;
 }
 
+export interface ResourceFileReadResult {
+  path: string;
+  absolute_path: string;
+  mime_type: string;
+  size_bytes: number;
+  content_bytes: number;
+  truncated: boolean;
+  is_binary: boolean;
+  encoding: "utf8" | "base64";
+  content: string;
+}
+
 export class FileSystemService {
   constructor(private readonly pathGuard: PathGuard) {}
+
+  readFileForResource(project: ProjectMetadata, relativePath: string, maxBytes: number): ResourceFileReadResult {
+    const target = this.pathGuard.resolve(project.absolute_path, relativePath);
+    this.pathGuard.assertExists(target);
+
+    const stat = fs.statSync(target);
+    const raw = fs.readFileSync(target);
+    const truncated = raw.byteLength > maxBytes;
+    const safeBuffer = truncated ? raw.subarray(0, maxBytes) : raw;
+    const isBinary = detectBinary(safeBuffer);
+    const mimeType = (lookupMime(target) || "application/octet-stream").toString();
+
+    return {
+      path: relativePath,
+      absolute_path: target,
+      mime_type: mimeType,
+      size_bytes: stat.size,
+      content_bytes: safeBuffer.byteLength,
+      truncated,
+      is_binary: isBinary,
+      encoding: isBinary ? "base64" : "utf8",
+      content: isBinary ? safeBuffer.toString("base64") : safeBuffer.toString("utf8")
+    };
+  }
 
   listDirectory(project: ProjectMetadata, relativePath: string) {
     const target = this.pathGuard.resolve(project.absolute_path, relativePath || ".");
@@ -225,6 +261,28 @@ export class FileSystemService {
 
     return walk(project.absolute_path, 0);
   }
+}
+
+function detectBinary(buffer: Buffer): boolean {
+  const maxProbe = Math.min(buffer.length, 1024);
+  if (maxProbe === 0) {
+    return false;
+  }
+
+  let suspicious = 0;
+  for (let i = 0; i < maxProbe; i += 1) {
+    const byte = buffer[i];
+    if (byte === 0) {
+      return true;
+    }
+
+    const isControl = byte < 7 || (byte > 14 && byte < 32);
+    if (isControl) {
+      suspicious += 1;
+    }
+  }
+
+  return suspicious / maxProbe > 0.1;
 }
 
 function toProjectRelative(root: string, absolutePath: string): string {

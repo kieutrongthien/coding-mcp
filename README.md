@@ -9,6 +9,7 @@ Production-oriented multi-project MCP server for coding agents, designed to mana
 - Git operations with validation and structured command output
 - Safe command execution with allowlisted executables and timeout controls
 - MCP tools, resources, and prompts
+- Binary-safe file resource endpoints (text or base64 blob)
 - Shared business core for STDIO and HTTP transports
 - Structured JSON response envelope with request IDs and timing
 - Audit logging for mutating operations
@@ -135,6 +136,13 @@ Key vars:
 - `project://{project_id}/readme`
 - `project://{project_id}/git-status`
 - `project://file/{project_id}/{path}`
+- `project://file-meta/{project_id}/{path}`
+
+`project://file/{project_id}/{path}` behavior:
+
+- Text files are returned as `text`.
+- Binary files are returned as base64 `blob` with MIME type.
+- Output is bounded by configured max output size.
 
 ## Multi-root Discovery
 
@@ -207,8 +215,7 @@ npm test
 
 1. Full hunk-level unified diff patch application engine
 2. OpenTelemetry export hooks
-3. Binary-safe file streaming resource endpoints
-4. Auth/RBAC for exposed HTTP deployments
+3. Auth/RBAC for exposed HTTP deployments
 
 ## License
 MIT License

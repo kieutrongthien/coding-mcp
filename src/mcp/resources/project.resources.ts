@@ -91,16 +91,61 @@ export function registerProjectResources(server: any, services: AppServices): vo
     },
     async (uri: URL, params: { project_id: string; path: string }) => {
       const project = services.projectRegistry.getProject(params.project_id);
-      const read = services.filesystem.readFile(project, params.path, {
-        maxFileSize: services.config.maxFileSize
-      });
+      const read = services.filesystem.readFileForResource(project, params.path, services.config.maxOutputSize);
+
+      if (read.is_binary) {
+        return {
+          contents: [
+            {
+              uri: uri.toString(),
+              mimeType: read.mime_type || "application/octet-stream",
+              blob: read.content
+            }
+          ]
+        };
+      }
 
       return {
         contents: [
           {
             uri: uri.toString(),
-            mimeType: (mime.lookup(params.path) || "text/plain").toString(),
+            mimeType: (mime.lookup(params.path) || read.mime_type || "text/plain").toString(),
             text: read.content
+          }
+        ]
+      };
+    }
+  );
+
+  server.registerResource(
+    "project-file-meta-template",
+    "project://file-meta/{project_id}/{path}",
+    {
+      title: "Project file metadata"
+    },
+    async (uri: URL, params: { project_id: string; path: string }) => {
+      const project = services.projectRegistry.getProject(params.project_id);
+      const read = services.filesystem.readFileForResource(project, params.path, services.config.maxOutputSize);
+
+      return {
+        contents: [
+          {
+            uri: uri.toString(),
+            mimeType: "application/json",
+            text: JSON.stringify(
+              {
+                path: read.path,
+                absolute_path: read.absolute_path,
+                mime_type: read.mime_type,
+                size_bytes: read.size_bytes,
+                content_bytes: read.content_bytes,
+                truncated: read.truncated,
+                is_binary: read.is_binary,
+                encoding: read.encoding
+              },
+              null,
+              2
+            )
           }
         ]
       };
