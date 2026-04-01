@@ -1,6 +1,6 @@
 {
   "name": "@kieutrongthien/coding-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Production-ready multi-project MCP server for coding agents",
   "keywords": [
     "MCP",
