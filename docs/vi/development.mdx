@@ -3,6 +3,29 @@ title: "Phát triển"
 description: "Quy trình phát triển local, test và release cho coding-mcp."
 ---
 
+Trang này dành cho người đóng góp trực tiếp vào mã nguồn `coding-mcp`. Với mục đích sử dụng thông thường, agent có thể làm việc từ xa qua MCP mà không cần clone target repository về máy agent.
+
+Clone mã nguồn về từ Github:
+
+```bash
+git clone https://github.com/kieutrongthien/coding-mcp.git
+cd coding-mcp && npm install
+```
+
+## Cấu hình môi trường
+
+Tạo file env local từ file mẫu:
+
+```bash
+cp .env.example .env
+```
+
+Đặt project roots trong `.env`:
+
+```bash
+PROJECTS_ROOTS=/projects,/srv/repos
+```
+
 ## Vòng lặp phát triển local
 
 Dùng quy trình này khi làm feature:

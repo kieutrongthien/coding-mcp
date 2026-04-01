@@ -1,7 +1,9 @@
 ---
 title: "Quickstart"
-description: "Install and run coding-mcp with your first project roots."
+description: "Install and run coding-mcp for remote coding workflows without cloning repositories locally."
 ---
+
+`coding-mcp` is primarily used when your agent should work on repositories remotely, without cloning source code or doing per-repository setup on the agent machine.
 
 <Info>
   **Prerequisites**:
@@ -17,48 +19,26 @@ Install globally from npm:
 npm install -g @kieutrongthien/coding-mcp
 ```
 
-Or run directly with npx:
-
-```bash
-npx @kieutrongthien/coding-mcp serve --transport http --host 0.0.0.0 --port 4000 --mode streamable
-```
-
-If you want to develop from source:
-
-```bash
-git clone https://github.com/kieutrongthien/coding-mcp.git
-cd coding-mcp
-npm install
-npm run build
-```
-
-## Configure environment
-
-Create a local env file from the example:
-
-```bash
-cp .env.example .env
-```
-
-Set project roots in `.env`:
-
-```bash
-PROJECTS_ROOTS=/projects,/srv/repos
-```
-
 ## Initialize the project registry
 
-Use the CLI to scan and persist projects from a root:
+Use the CLI to scan and add all projects in a folder:
 
 ```bash
-coding-mcp init /projects
+cd /my-projects
+coding-mcp init
 ```
 
-Add or remove roots later:
+or add other projects from another location:
 
 ```bash
-coding-mcp add /srv/repos
-coding-mcp remove /srv/repos
+coding-mcp init /other-projects
+```
+
+Add or remove projects later:
+
+```bash
+coding-mcp add /projects/my-repo
+coding-mcp remove /projects/my-repo
 ```
 
 ## Start the server
@@ -73,15 +53,6 @@ STDIO mode:
 
 ```bash
 coding-mcp serve --transport stdio
-```
-
-## Verify
-
-Run quality checks after setup:
-
-```bash
-npm run typecheck
-npm test
 ```
 
 ## Next steps

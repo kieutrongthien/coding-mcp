@@ -2,7 +2,7 @@
 
 Production-ready, multi-project MCP server for coding agents.
 
-`coding-mcp` is designed for remote and local agent workflows where many repositories are managed under one or more root folders (for example `/projects`, `/srv/repos`). It provides safe filesystem and git automation, consistent MCP contracts, and hardened HTTP deployment controls.
+`coding-mcp` is designed for remote and local agent workflows where many repositories are managed under one or more root folders (for example `/projects`, `/srv/repos`). The primary goal is to let agents code remotely without cloning source repositories to the agent machine and without per-repository local setup on that machine. It provides safe filesystem and git automation, consistent MCP contracts, and hardened HTTP deployment controls.
 
 ## Documentation
 - Quickstart: [https://coding-mcp.omaicode.com](https://coding-mcp.omaicode.com)
@@ -71,12 +71,6 @@ Failed operation:
 
 ```bash
 npm install -g @kieutrongthien/coding-mcp
-```
-
-Run directly without global install:
-
-```bash
-npx @kieutrongthien/coding-mcp serve --transport http --host 0.0.0.0 --port 4000 --mode streamable
 ```
 
 If you want to develop from source, use:

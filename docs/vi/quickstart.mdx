@@ -1,7 +1,9 @@
 ---
 title: "Bắt đầu nhanh"
-description: "Cài đặt và chạy coding-mcp với root dự án đầu tiên."
+description: "Cài đặt và chạy coding-mcp cho workflow code từ xa, không cần clone repository về máy agent."
 ---
+
+`coding-mcp` được ưu tiên cho tình huống agent cần làm việc từ xa trên repository, không cần clone source code hoặc setup từng repo trên máy chạy agent.
 
 <Info>
   **Điều kiện tiên quyết**:
@@ -17,48 +19,26 @@ Cài đặt global từ npm:
 npm install -g @kieutrongthien/coding-mcp
 ```
 
-Hoặc chạy trực tiếp bằng npx:
-
-```bash
-npx @kieutrongthien/coding-mcp serve --transport http --host 0.0.0.0 --port 4000 --mode streamable
-```
-
-Nếu bạn muốn phát triển từ source:
-
-```bash
-git clone https://github.com/kieutrongthien/coding-mcp.git
-cd coding-mcp
-npm install
-npm run build
-```
-
-## Cấu hình môi trường
-
-Tạo file env local từ file mẫu:
-
-```bash
-cp .env.example .env
-```
-
-Đặt project roots trong `.env`:
-
-```bash
-PROJECTS_ROOTS=/projects,/srv/repos
-```
-
 ## Khởi tạo project registry
 
-Dùng CLI để quét và lưu projects từ một root:
+Dùng CLI để quét và lưu toàn bộ dự án trong một thư mục:
 
 ```bash
-coding-mcp init /projects
+cd /my-projects
+coding-mcp init
 ```
 
-Thêm hoặc xóa root sau đó:
+hoặc thêm các dự án từ một thư mục khác:
 
 ```bash
-coding-mcp add /srv/repos
-coding-mcp remove /srv/repos
+coding-mcp init /other-projects
+```
+
+Thêm hoặc xóa dự án:
+
+```bash
+coding-mcp add /projects/my-repo
+coding-mcp remove /projects/my-repo
 ```
 
 ## Khởi động server
@@ -73,15 +53,6 @@ STDIO mode:
 
 ```bash
 coding-mcp serve --transport stdio
-```
-
-## Kiểm tra
-
-Chạy quality checks sau khi setup:
-
-```bash
-npm run typecheck
-npm test
 ```
 
 ## Bước tiếp theo

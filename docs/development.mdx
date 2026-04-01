@@ -3,6 +3,29 @@ title: "Development"
 description: "Local development, testing, and release workflow for coding-mcp."
 ---
 
+Use this page when you are contributing to `coding-mcp` itself. For normal usage, agents can work remotely through MCP without cloning target repositories to the agent machine.
+
+Clone the source code:
+
+```bash
+git clone https://github.com/kieutrongthien/coding-mcp.git
+cd coding-mcp && npm install
+```
+
+## Configure environment
+
+Create a local env file from the example:
+
+```bash
+cp .env.example .env
+```
+
+Set project roots in `.env`:
+
+```bash
+PROJECTS_ROOTS=/projects,/srv/repos
+```
+
 ## Local workflow
 
 Use this loop for feature development:
