@@ -1,4 +1,5 @@
 import { createServer } from "node:http";
+import crypto from "node:crypto";
 import type { AppServices } from "./bootstrap.js";
 import { createMcpServer } from "../mcp/server.js";
 import { runWithAuthContext } from "../services/auth/auth-context.js";
@@ -71,7 +72,8 @@ async function createTransportByMode(mode: "streamable" | "sse"): Promise<any> {
   if (mode === "streamable") {
     const streamableModule = await import("@modelcontextprotocol/sdk/server/streamableHttp.js");
     return new streamableModule.StreamableHTTPServerTransport({
-      sessionIdGenerator: undefined
+      // Stateful mode is required when reusing a transport instance across requests.
+      sessionIdGenerator: () => crypto.randomUUID()
     });
   }
 

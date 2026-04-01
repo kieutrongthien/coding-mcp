@@ -118,6 +118,11 @@ async function main() {
 }
 
 function parseCliArgs(argv: string[]): CliArgs {
+  if (argv.length === 0) {
+    printHelp();
+    process.exit(0);
+  }
+
   if (argv.includes("--help") || argv.includes("-h")) {
     printHelp();
     process.exit(0);
