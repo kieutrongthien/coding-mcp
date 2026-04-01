@@ -24,7 +24,7 @@ export const appConfigSchema = z
         })
       )
       .default([]),
-    httpHost: z.string().default("0.0.0.0"),
+    httpHost: z.string().default("127.0.0.1"),
     httpPort: z.number().int().positive().default(3000),
     httpMode: z.enum(["streamable", "sse"]).default("streamable"),
     maxFileSize: z.number().int().positive().default(1024 * 1024),

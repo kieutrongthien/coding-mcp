@@ -23,4 +23,12 @@ describe("OpenTelemetry config parsing", () => {
     expect(config.otelExporterOtlpHeaders.authorization).toBe("Bearer token");
     expect(config.otelExporterOtlpHeaders["x-api-key"]).toBe("abc");
   });
+
+  it("defaults HTTP host to localhost", () => {
+    process.env.PROJECTS_ROOTS = process.cwd();
+    delete process.env.HTTP_HOST;
+
+    const config = loadConfig();
+    expect(config.httpHost).toBe("127.0.0.1");
+  });
 });
