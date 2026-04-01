@@ -4,9 +4,9 @@
   "description": "Production-ready multi-project MCP server for coding agents",
   "keywords": ["MCP", "coding", "server", "multi-project", "agents"],
   "type": "module",
-  "main": "dist/main/stdio.js",
+  "main": "dist/src/main/stdio.js",
   "bin": {
-    "coding-mcp": "dist/main/cli.js"
+    "coding-mcp": "dist/src/main/cli.js"
   },
   "engines": {
     "node": ">=20.11.0"
@@ -21,9 +21,9 @@
     "dev:serve": "tsx src/main/cli.ts",
     "dev:stdio": "tsx src/main/stdio.ts",
     "dev:http": "tsx src/main/http.ts",
-    "start:serve": "node dist/main/cli.js",
-    "start:stdio": "node dist/main/stdio.js",
-    "start:http": "node dist/main/http.js",
+    "start:serve": "node dist/src/main/cli.js",
+    "start:stdio": "node dist/src/main/stdio.js",
+    "start:http": "node dist/src/main/http.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",

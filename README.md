@@ -223,7 +223,7 @@ Cursor (STDIO):
   "mcpServers": {
     "coding-mcp": {
       "command": "node",
-      "args": ["/absolute/path/to/coding-mcp/dist/main/stdio.js"],
+      "args": ["/absolute/path/to/coding-mcp/dist/src/main/stdio.js"],
       "env": {
         "PROJECTS_ROOTS": "/projects,/srv/repos",
         "ENABLE_STDIO": "true",
@@ -241,7 +241,7 @@ Claude Desktop (STDIO):
   "mcpServers": {
     "coding-mcp": {
       "command": "node",
-      "args": ["/absolute/path/to/coding-mcp/dist/main/stdio.js"],
+      "args": ["/absolute/path/to/coding-mcp/dist/src/main/stdio.js"],
       "env": {
         "PROJECTS_ROOTS": "/projects"
       }
