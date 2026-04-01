@@ -71,7 +71,7 @@ jobs:
           done
 
           {
-            echo "## What's new"
+            echo "### What's new"
             if [[ ${#whats_new[@]} -eq 0 ]]; then
               echo "- No entries"
             else
@@ -81,7 +81,7 @@ jobs:
             fi
 
             echo
-            echo "## What's changed"
+            echo "### What's changed"
             if [[ ${#whats_changed[@]} -eq 0 ]]; then
               echo "- No entries"
             else
