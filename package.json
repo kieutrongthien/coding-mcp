@@ -1,8 +1,14 @@
 {
   "name": "@kieutrongthien/coding-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Production-ready multi-project MCP server for coding agents",
-  "keywords": ["MCP", "coding", "server", "multi-project", "agents"],
+  "keywords": [
+    "MCP",
+    "coding",
+    "server",
+    "multi-project",
+    "agents"
+  ],
   "type": "module",
   "main": "dist/src/main/stdio.js",
   "bin": {
