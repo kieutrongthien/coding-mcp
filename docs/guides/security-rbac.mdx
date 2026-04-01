@@ -25,18 +25,22 @@ x-api-key: editor-key
 
 ## Roles
 
-- `viewer`: read-oriented operations
-- `editor`: read + most write/build/test operations
-- `admin`: full access including destructive operations
+| Role | Permissions |
+|------|-------------|
+| `viewer` | Read-only operations (list, read, search, status) |
+| `editor` | Viewer permissions + non-destructive write, build, and test operations |
+| `admin` | Full access including destructive operations (delete, restore, force push) |
 
 ## Security controls in the codebase
 
-- Path traversal prevention
-- Project-boundary path resolution
-- Protected-path mutation blocking
-- Confirmation flags for destructive operations
-- Command allowlist and argument safety checks
-- Output and file size limits
+| Control | Description |
+|---------|-------------|
+| Path traversal prevention | All paths are resolved within the project root boundary |
+| Protected-path blocking | Configured `PROTECTED_PATHS` cannot be mutated |
+| Confirm flags | Destructive operations require explicit `confirm: true` |
+| Command allowlist | Only commands in `ALLOWED_COMMANDS` can be executed |
+| Output size limits | Command and resource outputs are truncated at `MAX_OUTPUT_SIZE` |
+| Per-project locking | Mutating operations use a per-project lock to prevent race conditions |
 
 ## Operational recommendations
 

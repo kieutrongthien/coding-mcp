@@ -1,32 +1,40 @@
 ---
 title: "Resources and prompts"
-description: "Reference for available MCP resources and prompt templates."
+description: "Full reference for MCP resources and prompt templates available in coding-mcp."
 ---
 
 ## Resources
 
-- `project://index`
-- `project://{project_id}/tree`
-- `project://{project_id}/package-json`
-- `project://{project_id}/readme`
-- `project://{project_id}/git-status`
-- `project://file/{project_id}/{path}`
-- `project://file-meta/{project_id}/{path}`
+Resources expose read-only data that agents can fetch directly by URI without going through a tool call.
+
+| Resource URI | Description |
+|--------------|-------------|
+| `project://index` | JSON list of all indexed projects with their metadata. |
+| `project://{project_id}/tree` | Directory tree of the project (depth 4). |
+| `project://{project_id}/readme` | Raw content of the project's `README.md` file. |
+| `project://{project_id}/package-json` | Raw content of the project's `package.json` file. |
+| `project://{project_id}/git-status` | Current git status of the project as JSON. |
+| `project://file/{project_id}/{path}` | Content of any file within the project. |
+| `project://file-meta/{project_id}/{path}` | Metadata of a file: size, MIME type, encoding, and truncation status. |
 
 ### File resource behavior
 
-- Text files are returned through `text`
-- Binary files are returned through base64 `blob`
-- Payloads are bounded by configured output limits
+- Text files are returned through the `text` field
+- Binary files are returned through the `blob` field as base64
+- Payloads are bounded by the configured `MAX_OUTPUT_SIZE` limit
 
 ## Prompts
 
-- `analyze-project`
-- `implement-task`
-- `explain-file`
-- `generate-commit-message`
-- `review-diff`
-- `fix-test-failures`
+Prompts are pre-built instruction templates that agents can invoke to start structured coding workflows.
+
+| Prompt | Description |
+|--------|-------------|
+| `analyze-project` | Analyze a project's architecture, risks, and actionable improvements. Accepts `project_id` and optional `focus`. |
+| `implement-task` | Implement a described task within a project. Accepts `project_id`, `task`, and optional `constraints`. |
+| `explain-file` | Explain how a specific file works. Accepts `project_id`, `path`, and optional `question`. |
+| `generate-commit-message` | Generate a conventional commit message from a diff summary. Accepts `project_id` and `diff_summary`. |
+| `review-diff` | Review a diff for bugs, regressions, and missing tests. Accepts `project_id` and `diff`. |
+| `fix-test-failures` | Fix failing tests given raw test output. Accepts `project_id` and `test_output`. |
 
 Each prompt accepts structured arguments and returns prompt messages suitable for MCP clients.
 

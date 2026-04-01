@@ -1,59 +1,73 @@
 ---
 title: "Tools"
-description: "Tool coverage for project, file, search, git, and command workflows."
+description: "Full reference for all MCP tools — project, file, search, git, and command workflows."
 ---
+
+All tools accept a `project_id` (returned by `list_projects`) and operate strictly within that project's root directory. Path traversal outside the root is blocked at the service layer.
 
 ## Project tools
 
-- `list_projects`
-- `get_project`
-- `refresh_project_index`
-- `summarize_project`
+| Tool | Description |
+|------|-------------|
+| `list_projects` | List all projects discovered in the configured root directories. |
+| `get_project` | Get metadata for a specific project: path, detected tooling, package manager, git info. |
+| `refresh_project_index` | Re-scan one project or all projects to pick up newly added repositories. |
+| `summarize_project` | Return a high-level summary of the project stack, package manager, and top-level tree. |
 
 ## File and directory tools
 
-- `list_directory`
-- `read_file`
-- `read_multiple_files`
-- `create_file`
-- `write_file`
-- `replace_in_file`
-- `apply_patch`
-- `delete_file`
-- `move_file`
+| Tool | Description |
+|------|-------------|
+| `list_directory` | List files and subdirectories at a given path within a project. |
+| `read_file` | Read file content, optionally bounded to a line range (`start_line`, `end_line`). |
+| `read_multiple_files` | Read multiple files in a single call. |
+| `create_file` | Create a new file. Set `overwrite: true` to replace an existing file. |
+| `write_file` | Overwrite the full content of an existing file. |
+| `replace_in_file` | Find and replace text in a file (first match or all matches via `replace_all`). |
+| `apply_patch` | Apply a unified diff or a list of structured edit operations to a file. Supports `dry_run`. |
+| `delete_file` | Delete a file or directory. Requires `confirm: true` as a safety guard. |
+| `move_file` | Move or rename a file or directory within the project. |
 
 ## Search and analysis tools
 
-- `search_files`
-- `grep_content`
-- `get_project_tree`
-- `summarize_project`
+| Tool | Description |
+|------|-------------|
+| `search_files` | Search for files by name or path pattern. Supports `include_glob` and `exclude_glob` filters. |
+| `grep_content` | Search file contents using a regex-like pattern. Returns matching lines with file paths and line numbers. |
+| `get_project_tree` | Get the directory tree of a project up to a configurable depth (`max_depth`). |
+| `summarize_project` | Return a summary of the project stack, package manager, detected tooling, and top-level tree. |
 
 ## Git tools
 
-- `git_status`
-- `git_diff`
-- `git_branch_list`
-- `git_checkout_new_branch`
-- `git_checkout_branch`
-- `git_pull`
-- `git_add`
-- `git_restore`
-- `git_commit`
-- `git_push`
-- `git_log`
-- `git_show`
-- `git_create_tag`
+| Tool | Description |
+|------|-------------|
+| `git_status` | Show the current working tree status (modified, staged, untracked files). |
+| `git_diff` | Show unstaged or staged (`staged: true`) changes as a unified diff. |
+| `git_branch_list` | List all local and remote branches. |
+| `git_checkout_new_branch` | Create and switch to a new branch. |
+| `git_checkout_branch` | Switch to an existing branch. |
+| `git_pull` | Pull the latest changes from the remote. |
+| `git_add` | Stage one or more files or paths. |
+| `git_restore` | Discard working tree changes for specified paths. Requires `confirm: true`. |
+| `git_commit` | Create a commit with the given message. |
+| `git_push` | Push commits to a remote branch. Supports `remote`, `branch`, and `set_upstream`. |
+| `git_log` | Show recent commit history with configurable `limit`. |
+| `git_show` | Show details of a specific commit, tag, or git object by `ref`. |
+| `git_create_tag` | Create an annotated tag with an optional `message`. |
 
 ## Command tools
 
-- `run_build`
-- `run_test`
-- `run_lint`
-- `run_command_safe`
+Commands run inside the project directory. Only commands on the `ALLOWED_COMMANDS` allowlist are executed.
+
+| Tool | Description |
+|------|-------------|
+| `run_build` | Run the build command auto-detected from the project tooling (e.g. `npm run build`, `make`). |
+| `run_test` | Run the test command auto-detected from the project tooling (e.g. `npm test`, `pytest`). |
+| `run_lint` | Run the lint command auto-detected from the project tooling (e.g. `npm run lint`, `ruff`). |
+| `run_command_safe` | Run any allowlisted command with explicit `args`, optional `cwd`, and `timeout_ms`. |
 
 ## Notes
 
-- Destructive operations require explicit confirm flags.
-- All tool operations are validated with zod schemas.
-- HTTP mode enforces role-based authorization when auth is enabled.
+- Destructive operations (`delete_file`, `git_restore`) require explicit `confirm: true`.
+- All tool inputs are validated with zod schemas before execution.
+- In HTTP mode with auth enabled, role-based authorization runs before each tool operation.

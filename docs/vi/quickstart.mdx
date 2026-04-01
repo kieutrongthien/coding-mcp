@@ -1,6 +1,6 @@
 ---
 title: "Bắt đầu nhanh"
-description: "Cài đặt và chạy coding-mcp cho workflow code từ xa, không cần clone repository về máy agent."
+description: "Cài đặt coding-mcp và kết nối AI agent đầu tiên với repository từ xa."
 ---
 
 `coding-mcp` được ưu tiên cho tình huống agent cần làm việc từ xa trên repository, không cần clone source code hoặc setup từng repo trên máy chạy agent.
@@ -28,13 +28,13 @@ cd /my-projects
 coding-mcp init
 ```
 
-hoặc thêm các dự án từ một thư mục khác:
+hoặc thêm các dự án từ một đường dẫn cụ thể:
 
 ```bash
 coding-mcp init /other-projects
 ```
 
-Thêm hoặc xóa dự án:
+Thêm hoặc xóa roots sau đó:
 
 ```bash
 coding-mcp add /projects/my-repo
@@ -43,21 +43,72 @@ coding-mcp remove /projects/my-repo
 
 ## Khởi động server
 
-HTTP mode:
+HTTP mode (cho remote agents):
 
 ```bash
 coding-mcp serve --transport http --host 0.0.0.0 --port 4000 --mode streamable
 ```
 
-STDIO mode:
+STDIO mode (cho local agents như Cursor hoặc Claude Desktop):
 
 ```bash
 coding-mcp serve --transport stdio
 ```
 
+## Kết nối agent
+
+### Claude Desktop (STDIO)
+
+```json
+{
+  "mcpServers": {
+    "coding-mcp": {
+      "command": "node",
+      "args": ["/absolute/path/to/coding-mcp/dist/src/main/stdio.js"],
+      "env": {
+        "PROJECTS_ROOTS": "/projects"
+      }
+    }
+  }
+}
+```
+
+### Cursor (STDIO)
+
+```json
+{
+  "mcpServers": {
+    "coding-mcp": {
+      "command": "node",
+      "args": ["/absolute/path/to/coding-mcp/dist/src/main/stdio.js"],
+      "env": {
+        "PROJECTS_ROOTS": "/projects,/srv/repos",
+        "ENABLE_STDIO": "true",
+        "ENABLE_HTTP": "false"
+      }
+    }
+  }
+}
+```
+
+### Generic HTTP MCP client
+
+```json
+{
+  "mcpServers": {
+    "coding-mcp-http": {
+      "url": "http://your-host:4000",
+      "headers": {
+        "x-api-key": "editor-key"
+      }
+    }
+  }
+}
+```
+
 ## Bước tiếp theo
 
-- Cấu hình nâng cao trong [Configuration](/guides/configuration)
+- Cấu hình nâng cao trong [Cấu hình](/vi/guides/configuration)
 - Xem các tình huống thực tế trong [Use cases](/vi/guides/use-cases)
-- Bật auth trong [Security and RBAC](/guides/security-rbac)
-- Bật traces trong [Observability](/guides/observability)
+- Bật auth trong [Bảo mật và RBAC](/vi/guides/security-rbac)
+- Bật traces trong [Quan sát hệ thống](/vi/guides/observability)

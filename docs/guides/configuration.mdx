@@ -7,17 +7,43 @@ Use `.env`, environment variables, or `MCP_CONFIG_PATH` with a JSON/YAML file.
 
 ## Core settings
 
-- `PROJECTS_ROOTS`: comma-separated project roots (preferred)
-- `PROJECTS_ROOT`: legacy single-root fallback
-- `ENABLE_HTTP`, `ENABLE_STDIO`
-- `HTTP_HOST`, `HTTP_PORT`, `HTTP_MODE`
-- `MAX_FILE_SIZE`, `MAX_OUTPUT_SIZE`
-- `COMMAND_TIMEOUT_MS`
-- `RETRY_MAX_ATTEMPTS`, `RETRY_BASE_DELAY_MS`
-- `ALLOWED_COMMANDS`
-- `PROTECTED_PATHS`
-- `LOG_LEVEL`
-- `REGISTRY_FILE`, `AUDIT_LOG_FILE`, `HTTP_REQUEST_LOG_FILE`
+| Variable | Description |
+|----------|-------------|
+| `PROJECTS_ROOTS` | Comma-separated list of root directories to scan for projects (preferred). |
+| `PROJECTS_ROOT` | Single root directory (legacy compatibility). |
+| `ENABLE_HTTP` | Enable the HTTP transport (`true`/`false`). |
+| `ENABLE_STDIO` | Enable the STDIO transport (`true`/`false`). |
+| `HTTP_HOST` | HTTP server bind address. Default: `127.0.0.1`. |
+| `HTTP_PORT` | HTTP server port. Default: `3000`. |
+| `HTTP_MODE` | HTTP transport mode: `streamable` or `sse`. |
+| `MAX_FILE_SIZE` | Maximum file size for read operations (bytes). |
+| `MAX_OUTPUT_SIZE` | Maximum command or resource output size (bytes). |
+| `COMMAND_TIMEOUT_MS` | Timeout for command execution (milliseconds). |
+| `RETRY_MAX_ATTEMPTS` | Number of retry attempts for transient failures. |
+| `RETRY_BASE_DELAY_MS` | Base delay between retries (milliseconds). |
+| `ALLOWED_COMMANDS` | Comma-separated list of commands permitted by `run_command_safe`. |
+| `PROTECTED_PATHS` | Comma-separated path patterns that cannot be modified. |
+| `LOG_LEVEL` | Log verbosity: `trace`, `debug`, `info`, `warn`, `error`. |
+| `REGISTRY_FILE` | Path to the project registry JSON file. |
+| `AUDIT_LOG_FILE` | Path to the audit log for mutating operations. |
+| `HTTP_REQUEST_LOG_FILE` | Path to the HTTP request log. |
+
+## Security settings
+
+| Variable | Description |
+|----------|-------------|
+| `ENABLE_AUTH` | Enable API-key authentication for the HTTP transport. |
+| `AUTH_HEADER_NAME` | HTTP header used to pass the API key. Default: `x-api-key`. |
+| `AUTH_API_KEYS` | Comma-separated keys in `key:role:id` format. |
+
+## Observability settings
+
+| Variable | Description |
+|----------|-------------|
+| `ENABLE_OTEL` | Enable OpenTelemetry tracing. |
+| `OTEL_SERVICE_NAME` | Service name reported in traces. |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | OTLP HTTP endpoint for trace export. |
+| `OTEL_EXPORTER_OTLP_HEADERS` | Headers for the OTLP exporter in `key=value,key2=value2` format. |
 
 ## Cross-platform paths
 

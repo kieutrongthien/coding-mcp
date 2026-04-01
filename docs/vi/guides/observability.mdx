@@ -38,16 +38,20 @@ OTEL_EXPORTER_OTLP_HEADERS=authorization=Bearer%20token
 
 Spans được phát:
 
-- `mcp.http.request`
-- `mcp.tool.{operation}`
+| Span | Mô tả |
+|------|-------|
+| `mcp.http.request` | Phát cho mỗi HTTP request mà server nhận |
+| `mcp.tool.{operation}` | Phát cho mỗi lần thực thi tool, đặt tên theo operation |
 
 ## HTTP monitoring endpoints
 
-Khi bật HTTP transport, dùng các endpoint sau để theo dõi dịch vụ:
+Khi bật HTTP transport:
 
-- `GET /healthz` cho liveness checks
-- `GET /readyz` cho readiness checks kèm số lượng project đã index
-- `GET /metrics` cho request metrics cơ bản (`request_count`, `error_count`, latency summary)
+| Endpoint | Mô tả |
+|----------|-------|
+| `GET /healthz` | Liveness check — trả về `ok` khi server đang chạy |
+| `GET /readyz` | Readiness check — trả về `ok` kèm số lượng project đã index |
+| `GET /metrics` | Metrics cơ bản: `request_count`, `error_count` và latency summary |
 
 ## Xử lý sự cố
 

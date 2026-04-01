@@ -1,32 +1,40 @@
 ---
 title: "Resources và prompts"
-description: "Tham chiếu cho MCP resources và prompt templates hiện có."
+description: "Tham chiếu đầy đủ cho MCP resources và prompt templates trong coding-mcp."
 ---
 
 ## Resources
 
-- `project://index`
-- `project://{project_id}/tree`
-- `project://{project_id}/package-json`
-- `project://{project_id}/readme`
-- `project://{project_id}/git-status`
-- `project://file/{project_id}/{path}`
-- `project://file-meta/{project_id}/{path}`
+Resources cung cấp dữ liệu read-only mà agent có thể fetch trực tiếp qua URI mà không cần gọi qua tool.
+
+| Resource URI | Mô tả |
+|--------------|-------|
+| `project://index` | Danh sách JSON tất cả project đã index kèm metadata. |
+| `project://{project_id}/tree` | Cây thư mục của project (độ sâu 4). |
+| `project://{project_id}/readme` | Nội dung thô của file `README.md` dự án. |
+| `project://{project_id}/package-json` | Nội dung thô của file `package.json` dự án. |
+| `project://{project_id}/git-status` | Trạng thái git hiện tại của project dưới dạng JSON. |
+| `project://file/{project_id}/{path}` | Nội dung của bất kỳ file nào trong project. |
+| `project://file-meta/{project_id}/{path}` | Metadata của file: kích thước, MIME type, encoding và trạng thái truncation. |
 
 ### Hành vi file resource
 
 - Text files được trả về qua trường `text`
-- Binary files được trả về qua `blob` dạng base64
-- Payload bị giới hạn theo output limits đã cấu hình
+- Binary files được trả về qua trường `blob` dạng base64
+- Payload bị giới hạn theo giới hạn `MAX_OUTPUT_SIZE` đã cấu hình
 
 ## Prompts
 
-- `analyze-project`
-- `implement-task`
-- `explain-file`
-- `generate-commit-message`
-- `review-diff`
-- `fix-test-failures`
+Prompts là các template hướng dẫn có sẵn mà agent có thể gọi để bắt đầu workflow coding có cấu trúc.
+
+| Prompt | Mô tả |
+|--------|-------|
+| `analyze-project` | Phân tích kiến trúc, rủi ro và cải tiến có thể thực hiện của một dự án. Nhận `project_id` và `focus` tùy chọn. |
+| `implement-task` | Triển khai một task được mô tả trong project. Nhận `project_id`, `task` và `constraints` tùy chọn. |
+| `explain-file` | Giải thích cách một file cụ thể hoạt động. Nhận `project_id`, `path` và `question` tùy chọn. |
+| `generate-commit-message` | Tạo conventional commit message từ tóm tắt diff. Nhận `project_id` và `diff_summary`. |
+| `review-diff` | Review diff để tìm bug, regression và test còn thiếu. Nhận `project_id` và `diff`. |
+| `fix-test-failures` | Sửa các test đang fail dựa trên test output thô. Nhận `project_id` và `test_output`. |
 
 Mỗi prompt nhận structured arguments và trả về prompt messages phù hợp cho MCP clients.
 
