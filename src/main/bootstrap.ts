@@ -37,6 +37,18 @@ export interface AppServices {
 export function bootstrap(configPath?: string, overrides?: ConfigOverrides): AppServices {
   const config = loadConfig(configPath, overrides);
   const logger = createLogger({ level: config.logLevel });
+
+  const localhostHosts = new Set(["127.0.0.1", "localhost", "::1"]);
+  if (config.enableHttp && !config.enableAuth && !localhostHosts.has(config.httpHost)) {
+    logger.warn(
+      {
+        host: config.httpHost,
+        port: config.httpPort
+      },
+      "HTTP transport is exposed without auth; enable auth or bind to localhost"
+    );
+  }
+
   const audit = new AuditLogger(path.resolve(config.auditLogFile), logger);
   const locks = new ProjectLockManager();
 
