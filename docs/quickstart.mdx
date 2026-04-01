@@ -11,7 +11,23 @@ description: "Install and run coding-mcp with your first project roots."
 
 ## Install
 
+Install globally from npm:
+
 ```bash
+npm install -g @kieutrongthien/coding-mcp
+```
+
+Or run directly with npx:
+
+```bash
+npx @kieutrongthien/coding-mcp serve --transport http --host 0.0.0.0 --port 4000 --mode streamable
+```
+
+If you want to develop from source:
+
+```bash
+git clone https://github.com/kieutrongthien/coding-mcp.git
+cd coding-mcp
 npm install
 npm run build
 ```
@@ -50,7 +66,7 @@ coding-mcp remove /srv/repos
 HTTP mode:
 
 ```bash
-coding-mcp serve --transport http --host 0.0.0.0 --port 3000 --mode streamable
+coding-mcp serve --transport http --host 0.0.0.0 --port 4000 --mode streamable
 ```
 
 STDIO mode:

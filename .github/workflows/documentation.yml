@@ -1,0 +1,75 @@
+name: Documentation
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: documentation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  documentation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Mint CLI
+        run: npm install -g mint
+
+      - name: Validate docs
+        working-directory: docs
+        run: |
+          mint validate
+          mint broken-links
+
+      - name: Export static site
+        working-directory: docs
+        run: mint export --output ../mintlify-export.zip
+
+      - name: Unpack export
+        run: |
+          rm -rf mintlify-site
+          mkdir -p mintlify-site
+          unzip -q mintlify-export.zip -d mintlify-site
+
+      - name: Ensure root index.html exists
+        run: |
+          if [ ! -f mintlify-site/index.html ] && [ -f mintlify-site/index/index.html ]; then
+            cp mintlify-site/index/index.html mintlify-site/index.html
+          fi
+
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: mintlify-site
+
+  deploy-pages:
+    if: github.event_name != 'pull_request'
+    needs: documentation
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

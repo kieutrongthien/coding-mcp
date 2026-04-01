@@ -4,6 +4,12 @@ Production-ready, multi-project MCP server for coding agents.
 
 `coding-mcp` is designed for remote and local agent workflows where many repositories are managed under one or more root folders (for example `/projects`, `/srv/repos`). It provides safe filesystem and git automation, consistent MCP contracts, and hardened HTTP deployment controls.
 
+## Documentation
+- Quickstart: [https://kieutrongthien.github.io/coding-mcp](https://kieutrongthien.github.io/coding-mcp)
+- API Reference: [https://kieutrongthien.github.io/coding-mcp/api-reference](https://kieutrongthien.github.io/coding-mcp/api-reference)
+- Source Code Analysis: [https://kieutrongthien.github.io/coding-mcp/architecture/source-code-analysis](https://kieutrongthien.github.io/coding-mcp/architecture/source-code-analysis)
+- CLI and Registry Guide: [https://kieutrongthien.github.io/coding-mcp/guides/cli-and-registry](https://kieutrongthien.github.io/coding-mcp/guides/cli-and-registry)
+
 ## Highlights
 
 - Multi-project registry with persistent indexing
@@ -64,15 +70,30 @@ Failed operation:
 ## Quick Start
 
 ```bash
+npm install -g @kieutrongthien/coding-mcp
+```
+
+Run directly without global install:
+
+```bash
+npx @kieutrongthien/coding-mcp serve --transport http --host 0.0.0.0 --port 4000 --mode streamable
+```
+
+If you want to develop from source, use:
+
+```bash
+git clone https://github.com/kieutrongthien/coding-mcp.git
+cd coding-mcp
 cp .env.example .env
 npm install
 npm run build
+npm install -g .
 ```
 
 Run HTTP transport:
 
 ```bash
-npx coding-mcp serve --transport http --host 0.0.0.0 --port 4000 --mode streamable
+coding-mcp serve --transport http --host 0.0.0.0 --port 4000 --mode streamable
 ```
 
 Run STDIO transport:
