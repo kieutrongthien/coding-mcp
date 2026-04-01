@@ -1,42 +1,62 @@
 ---
 title: "Introduction"
-description: "Overview of coding-mcp for remote coding workflows without local repository cloning."
+description: "MCP server that lets AI agents perform coding tasks on remote repositories — no local clone needed."
 ---
 
-`coding-mcp` is a multi-project MCP server for coding agents. It is built to support remote coding workflows where agents can inspect, edit, test, and ship changes without cloning source code to the agent machine or setting up each repository locally.
+`coding-mcp` is a production-ready MCP server designed for one primary purpose: **let AI agents write and ship code on remote repositories without ever cloning them to the agent machine**.
 
-It provides safe file and git automation, consistent structured responses, HTTP/STDIO transports, API-key RBAC, and OpenTelemetry hooks.
+Deploy the server once on the machine that holds your code. Any MCP-compatible agent — Claude, Cursor, or any HTTP-capable client — connects to it and immediately has access to file operations, git, search, build, and test tools across all indexed projects.
 
-Use this documentation to set up the server, understand architecture, and extend tools safely.
+```
+┌─────────────────────────────────────────────┐
+│  AI Agent (Claude / Cursor / any MCP client) │
+└────────────────┬────────────────────────────┘
+                 │  MCP over HTTP or STDIO
+                 ▼
+┌─────────────────────────────────────────────┐
+│           coding-mcp server                  │
+│  (runs on the machine with your repos)       │
+│                                              │
+│  Tools: files · git · search · commands      │
+│  Resources: project index · file content     │
+│  Prompts: implement · review · fix tests     │
+└──────────────────┬──────────────────────────┘
+                   │  filesystem + git
+                   ▼
+        /projects/repo-a  /projects/repo-b  …
+```
 
 <CardGroup cols={2}>
   <Card title="Quickstart" icon="rocket" href="/quickstart">
-    Install, configure, and run coding-mcp locally.
+    Install, configure, and connect your first agent.
   </Card>
-  <Card title="Development" icon="code" href="/development">
-    Build, test, and validate changes in the repository.
+  <Card title="MCP interface" icon="terminal" href="/api-reference/introduction">
+    Full reference for tools, resources, and prompts.
   </Card>
   <Card title="Source code analysis" icon="binary" href="/architecture/source-code-analysis">
     Learn service boundaries and request flow.
   </Card>
-  <Card title="MCP interface" icon="terminal" href="/api-reference/introduction">
-    Review tools, resources, and prompts.
+  <Card title="Development" icon="code" href="/development">
+    Build, test, and validate changes in the repository.
   </Card>
 </CardGroup>
 
 ## Core capabilities
 
-- Multi-root project discovery and persistent registry
-- Safe file CRUD and patching with unified diff hunk support
-- Git operations with structured output
-- Allowlist-based command execution
-- Binary-safe file resources for text and binary payloads
-- HTTP auth with role-based access control
-- OpenTelemetry hooks for requests and tool operations
+| Capability | Description |
+|------------|-------------|
+| Multi-root project registry | Scan one or more root directories and persist a project index that agents query by stable ID |
+| File operations | Read, write, create, delete, move files and apply unified diffs or structured edits |
+| Git automation | Status, diff, branch, commit, push, tag — all with structured JSON output |
+| Search and analysis | Filename search, regex content grep, project tree, and stack summarization |
+| Safe command execution | Build, test, and lint runners auto-detected from project tooling; arbitrary commands via an allowlist |
+| Binary-safe resources | Files served as `text` or base64 `blob` depending on MIME type |
+| HTTP auth and RBAC | API-key authentication with `viewer`, `editor`, and `admin` roles |
+| OpenTelemetry hooks | Spans for every HTTP request and tool operation |
 
 ## Recommended reading path
 
-1. Start with [Quickstart](/quickstart)
-2. Configure roots and runtime in [Configuration](/guides/configuration)
+1. Start with [Quickstart](/quickstart) to install and connect an agent
+2. Configure roots and limits in [Configuration](/guides/configuration)
 3. Secure HTTP deployments in [Security and RBAC](/guides/security-rbac)
-4. Explore extension points in [Source code analysis](/architecture/source-code-analysis)
+4. Browse the full tool reference in [MCP interface](/api-reference/introduction)

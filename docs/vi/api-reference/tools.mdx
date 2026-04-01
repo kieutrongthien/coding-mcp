@@ -1,59 +1,73 @@
 ---
 title: "Tools"
-description: "Phạm vi tool cho workflow dự án, file, tìm kiếm, git và command."
+description: "Tham chiếu đầy đủ cho tất cả MCP tools — project, file, search, git và command workflows."
 ---
+
+Tất cả tools đều nhận `project_id` (trả về từ `list_projects`) và hoạt động nghiêm ngặt trong thư mục gốc của project đó. Path traversal ra ngoài root bị chặn ở service layer.
 
 ## Project tools
 
-- `list_projects`
-- `get_project`
-- `refresh_project_index`
-- `summarize_project`
+| Tool | Mô tả |
+|------|-------|
+| `list_projects` | Liệt kê tất cả project đã khám phá trong các thư mục root đã cấu hình. |
+| `get_project` | Lấy metadata của một project cụ thể: đường dẫn, tooling phát hiện được, package manager, thông tin git. |
+| `refresh_project_index` | Quét lại một project hoặc tất cả project để cập nhật repository mới thêm vào. |
+| `summarize_project` | Trả về tóm tắt cấp cao về stack dự án, package manager và cây thư mục tầng trên. |
 
 ## File và directory tools
 
-- `list_directory`
-- `read_file`
-- `read_multiple_files`
-- `create_file`
-- `write_file`
-- `replace_in_file`
-- `apply_patch`
-- `delete_file`
-- `move_file`
+| Tool | Mô tả |
+|------|-------|
+| `list_directory` | Liệt kê files và thư mục con tại một đường dẫn trong project. |
+| `read_file` | Đọc nội dung file, tùy chọn giới hạn theo khoảng dòng (`start_line`, `end_line`). |
+| `read_multiple_files` | Đọc nhiều file trong một lần gọi. |
+| `create_file` | Tạo file mới. Đặt `overwrite: true` để thay thế file đã tồn tại. |
+| `write_file` | Ghi đè toàn bộ nội dung file hiện có. |
+| `replace_in_file` | Tìm và thay thế text trong file (khớp đầu tiên hoặc tất cả qua `replace_all`). |
+| `apply_patch` | Apply unified diff hoặc danh sách structured edit operations lên file. Hỗ trợ `dry_run`. |
+| `delete_file` | Xóa file hoặc thư mục. Yêu cầu `confirm: true` như biện pháp bảo vệ. |
+| `move_file` | Di chuyển hoặc đổi tên file hoặc thư mục trong project. |
 
 ## Search và analysis tools
 
-- `search_files`
-- `grep_content`
-- `get_project_tree`
-- `summarize_project`
+| Tool | Mô tả |
+|------|-------|
+| `search_files` | Tìm kiếm file theo tên hoặc pattern đường dẫn. Hỗ trợ bộ lọc `include_glob` và `exclude_glob`. |
+| `grep_content` | Tìm kiếm nội dung file bằng regex-like pattern. Trả về dòng khớp với đường dẫn file và số dòng. |
+| `get_project_tree` | Lấy cây thư mục của project đến độ sâu cấu hình được (`max_depth`). |
+| `summarize_project` | Trả về tóm tắt stack dự án, package manager, tooling phát hiện và cây thư mục tầng trên. |
 
 ## Git tools
 
-- `git_status`
-- `git_diff`
-- `git_branch_list`
-- `git_checkout_new_branch`
-- `git_checkout_branch`
-- `git_pull`
-- `git_add`
-- `git_restore`
-- `git_commit`
-- `git_push`
-- `git_log`
-- `git_show`
-- `git_create_tag`
+| Tool | Mô tả |
+|------|-------|
+| `git_status` | Hiển thị trạng thái working tree hiện tại (đã sửa, đã stage, untracked files). |
+| `git_diff` | Hiển thị thay đổi chưa stage hoặc đã stage (`staged: true`) dưới dạng unified diff. |
+| `git_branch_list` | Liệt kê tất cả branch local và remote. |
+| `git_checkout_new_branch` | Tạo và chuyển sang branch mới. |
+| `git_checkout_branch` | Chuyển sang branch đã tồn tại. |
+| `git_pull` | Pull các thay đổi mới nhất từ remote. |
+| `git_add` | Stage một hoặc nhiều file hoặc đường dẫn. |
+| `git_restore` | Hủy thay đổi working tree cho các đường dẫn chỉ định. Yêu cầu `confirm: true`. |
+| `git_commit` | Tạo commit với message cho trước. |
+| `git_push` | Push commits lên remote branch. Hỗ trợ `remote`, `branch` và `set_upstream`. |
+| `git_log` | Hiển thị lịch sử commit gần đây với `limit` có thể cấu hình. |
+| `git_show` | Hiển thị chi tiết của một commit, tag hoặc git object theo `ref`. |
+| `git_create_tag` | Tạo annotated tag với `message` tùy chọn. |
 
 ## Command tools
 
-- `run_build`
-- `run_test`
-- `run_lint`
-- `run_command_safe`
+Command chạy trong thư mục dự án. Chỉ những command có trong `ALLOWED_COMMANDS` mới được thực thi.
+
+| Tool | Mô tả |
+|------|-------|
+| `run_build` | Chạy lệnh build tự động phát hiện từ tooling dự án (ví dụ `npm run build`, `make`). |
+| `run_test` | Chạy lệnh test tự động phát hiện từ tooling dự án (ví dụ `npm test`, `pytest`). |
+| `run_lint` | Chạy lệnh lint tự động phát hiện từ tooling dự án (ví dụ `npm run lint`, `ruff`). |
+| `run_command_safe` | Chạy bất kỳ lệnh nào trong allowlist với `args` tường minh, `cwd` tùy chọn và `timeout_ms`. |
 
 ## Ghi chú
 
-- Thao tác phá hủy yêu cầu confirm flags tường minh.
-- Mọi thao tác tool đều được validate bằng zod schemas.
-- Ở HTTP mode, phân quyền theo vai trò được áp dụng khi auth được bật.
+- Thao tác phá hủy (`delete_file`, `git_restore`) yêu cầu `confirm: true` tường minh.
+- Mọi input của tool đều được validate bằng zod schemas trước khi thực thi.
+- Ở HTTP mode có bật auth, phân quyền theo vai trò chạy trước mỗi tool operation.

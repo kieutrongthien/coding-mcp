@@ -1,6 +1,6 @@
 ---
 title: "Quickstart"
-description: "Install and run coding-mcp for remote coding workflows without cloning repositories locally."
+description: "Install coding-mcp and connect your first AI agent to remote repositories."
 ---
 
 `coding-mcp` is primarily used when your agent should work on repositories remotely, without cloning source code or doing per-repository setup on the agent machine.
@@ -28,13 +28,13 @@ cd /my-projects
 coding-mcp init
 ```
 
-or add other projects from another location:
+or add projects from an explicit path:
 
 ```bash
 coding-mcp init /other-projects
 ```
 
-Add or remove projects later:
+Add or remove roots later:
 
 ```bash
 coding-mcp add /projects/my-repo
@@ -43,16 +43,67 @@ coding-mcp remove /projects/my-repo
 
 ## Start the server
 
-HTTP mode:
+HTTP mode (for remote agents):
 
 ```bash
 coding-mcp serve --transport http --host 0.0.0.0 --port 4000 --mode streamable
 ```
 
-STDIO mode:
+STDIO mode (for local agents like Cursor or Claude Desktop):
 
 ```bash
 coding-mcp serve --transport stdio
+```
+
+## Connect an agent
+
+### Claude Desktop (STDIO)
+
+```json
+{
+  "mcpServers": {
+    "coding-mcp": {
+      "command": "node",
+      "args": ["/absolute/path/to/coding-mcp/dist/src/main/stdio.js"],
+      "env": {
+        "PROJECTS_ROOTS": "/projects"
+      }
+    }
+  }
+}
+```
+
+### Cursor (STDIO)
+
+```json
+{
+  "mcpServers": {
+    "coding-mcp": {
+      "command": "node",
+      "args": ["/absolute/path/to/coding-mcp/dist/src/main/stdio.js"],
+      "env": {
+        "PROJECTS_ROOTS": "/projects,/srv/repos",
+        "ENABLE_STDIO": "true",
+        "ENABLE_HTTP": "false"
+      }
+    }
+  }
+}
+```
+
+### Generic HTTP MCP client
+
+```json
+{
+  "mcpServers": {
+    "coding-mcp-http": {
+      "url": "http://your-host:4000",
+      "headers": {
+        "x-api-key": "editor-key"
+      }
+    }
+  }
+}
 ```
 
 ## Next steps

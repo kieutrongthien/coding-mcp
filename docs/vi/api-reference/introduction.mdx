@@ -1,17 +1,21 @@
 ---
 title: "Tổng quan giao diện MCP"
-description: "Hiểu bề mặt MCP giúp agent code từ xa mà không cần clone repository về máy cục bộ."
+description: "Tham chiếu đầy đủ cho tools, resources và prompts giúp agent code trên repository từ xa."
 ---
 
 Giao diện này được thiết kế để agent thao tác trên repository từ xa, không cần clone source code về máy chạy agent.
 
 Server cung cấp năng lực MCP theo 3 nhóm:
 
-- Tools: thao tác dự án, chỉnh sửa file, tìm kiếm, git và thực thi command
-- Resources: project tree, files, metadata và status
-- Prompts: các prompt tái sử dụng cho coding workflow
+| Nhóm | Mô tả |
+|------|-------|
+| **Tools** | Thao tác chủ động: quản lý project, chỉnh sửa file, tìm kiếm, git và thực thi command |
+| **Resources** | Dữ liệu read-only thụ động: cây dự án, nội dung file, metadata và git status |
+| **Prompts** | Hướng dẫn workflow có sẵn: implement, analyze, review, generate commit, fix tests |
 
 ## Response envelope
+
+Tất cả tool responses đều dùng chung định dạng envelope nhất quán.
 
 Thao tác thành công:
 
@@ -42,8 +46,8 @@ Thao tác thất bại:
 
 ## Vị trí triển khai handlers
 
-- `src/mcp/tools/*`
-- `src/mcp/resources/*`
-- `src/mcp/prompts/*`
+- `src/mcp/tools/*` — tool handlers
+- `src/mcp/resources/*` — resource handlers
+- `src/mcp/prompts/*` — prompt handlers
 
-Dùng các trang tham chiếu trong tab này để xem phạm vi năng lực đã hỗ trợ.
+Dùng các trang tham chiếu trong phần này để xem toàn bộ bề mặt năng lực đã hỗ trợ.

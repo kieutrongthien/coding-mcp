@@ -1,17 +1,21 @@
 ---
 title: "MCP interface overview"
-description: "Understand the MCP surface that enables remote coding workflows without local repository cloning."
+description: "Full reference for tools, resources, and prompts that enable agents to code on remote repositories."
 ---
 
 This interface is designed so agents can operate on repositories remotely, without cloning source code to the machine running the agent.
 
 The server exposes MCP capabilities in three groups:
 
-- Tools: project operations, file editing, search, git, and command execution
-- Resources: project tree, files, metadata, and status
-- Prompts: reusable coding workflow prompts
+| Group | Description |
+|-------|-------------|
+| **Tools** | Active operations: project management, file editing, search, git, and command execution |
+| **Resources** | Passive read-only data: project tree, file content, metadata, and git status |
+| **Prompts** | Pre-built workflow instructions: implement, analyze, review, generate commit, fix tests |
 
 ## Response envelope
+
+All tool responses share a consistent envelope format.
 
 Successful operation:
 
@@ -42,8 +46,8 @@ Failed operation:
 
 ## Where handlers are implemented
 
-- `src/mcp/tools/*`
-- `src/mcp/resources/*`
-- `src/mcp/prompts/*`
+- `src/mcp/tools/*` — tool handlers
+- `src/mcp/resources/*` — resource handlers
+- `src/mcp/prompts/*` — prompt handlers
 
-Use the reference pages in this tab to review capability coverage.
+Use the reference pages in this section to review the full capability surface.

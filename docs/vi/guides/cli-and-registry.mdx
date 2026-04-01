@@ -7,28 +7,28 @@ CLI hỗ trợ khởi động transport và quản lý registry roots theo cách
 
 ## Lệnh
 
-```bash
-coding-mcp serve [options]
-coding-mcp init [folder]
-coding-mcp add <folder>
-coding-mcp remove <folder>
-```
+| Lệnh | Mô tả |
+|------|-------|
+| `coding-mcp init [folder]` | Quét thư mục để tìm project và ghi registry. Mặc định là thư mục hiện tại. |
+| `coding-mcp add <folder>` | Thêm thư mục root mới vào project registry và quét lại. |
+| `coding-mcp remove <folder>` | Xóa thư mục root khỏi registry và quét lại các root còn lại. |
+| `coding-mcp serve [options]` | Khởi động MCP server. Nhận các flag `--transport`, `--host`, `--port` và `--mode`. |
 
 ## Quản lý root
 
-`init` đặt lại roots về một folder và quét toàn bộ.
+`init` đặt lại roots về một folder và quét toàn bộ:
 
 ```bash
 coding-mcp init /projects
 ```
 
-`add` thêm một root và quét lại.
+`add` thêm một root và quét lại:
 
 ```bash
 coding-mcp add /srv/repos
 ```
 
-`remove` xóa một root và quét lại các root còn lại.
+`remove` xóa một root và quét lại các root còn lại:
 
 ```bash
 coding-mcp remove /srv/repos
@@ -42,14 +42,14 @@ Mọi thao tác đều được lưu vào file registry JSON.
 coding-mcp serve --transport http --host 0.0.0.0 --port 3000 --mode streamable
 ```
 
-Tùy chọn thường dùng:
-
-- `--transport <http|stdio>`
-- `--host <host>`
-- `--port <port>`
-- `--mode <streamable|sse>`
-- `--projects-root <path>` (lặp lại nhiều lần)
-- `--config <path>`
+| Flag | Mô tả |
+|------|-------|
+| `--transport <http\|stdio>` | Transport cần dùng. Mặc định là `stdio`. |
+| `--host <host>` | Địa chỉ bind cho HTTP mode. Mặc định là `127.0.0.1`. |
+| `--port <port>` | Cổng cho HTTP mode. Mặc định là `3000`. |
+| `--mode <streamable\|sse>` | Chế độ HTTP transport. |
+| `--projects-root <path>` | Thêm project root (có thể lặp lại). |
+| `--config <path>` | Đường dẫn đến file cấu hình JSON hoặc YAML. |
 
 ## Structured output
 

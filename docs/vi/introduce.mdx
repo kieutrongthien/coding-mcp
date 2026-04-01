@@ -1,42 +1,62 @@
 ---
 title: "Giới thiệu"
-description: "Tổng quan coding-mcp cho workflow code từ xa, không cần clone source code về máy agent."
+description: "MCP server giúp AI agent thực hiện coding tasks trên repository từ xa — không cần clone về máy agent."
 ---
 
-`coding-mcp` là MCP server đa dự án cho coding agent. Dự án được tạo ra để hỗ trợ workflow xây dựng agent code từ xa, không cần clone source code về máy chạy agent và không cần setup từng repository tại máy đó.
+`coding-mcp` là MCP server production-ready được xây dựng với một mục tiêu chính: **cho phép AI agent viết và ship code trên repository từ xa mà không cần clone về máy chạy agent**.
 
-Hệ thống cung cấp tự động hóa file và git an toàn, response có cấu trúc thống nhất, transport HTTP/STDIO, API-key RBAC và OpenTelemetry hooks.
+Triển khai server một lần trên máy chứa code. Bất kỳ agent tương thích MCP nào — Claude, Cursor, hay bất kỳ HTTP client nào — đều có thể kết nối và ngay lập tức truy cập các tool thao tác file, git, tìm kiếm, build và test trên toàn bộ project đã index.
 
-Hãy dùng bộ tài liệu này để thiết lập server, hiểu kiến trúc, và mở rộng tools một cách an toàn.
+```
+┌─────────────────────────────────────────────┐
+│  AI Agent (Claude / Cursor / any MCP client) │
+└────────────────┬────────────────────────────┘
+                 │  MCP qua HTTP hoặc STDIO
+                 ▼
+┌─────────────────────────────────────────────┐
+│           coding-mcp server                  │
+│  (chạy trên máy chứa repositories)          │
+│                                              │
+│  Tools: files · git · search · commands      │
+│  Resources: project index · file content     │
+│  Prompts: implement · review · fix tests     │
+└──────────────────┬──────────────────────────┘
+                   │  filesystem + git
+                   ▼
+        /projects/repo-a  /projects/repo-b  …
+```
 
 <CardGroup cols={2}>
   <Card title="Bắt đầu nhanh" icon="rocket" href="/vi/quickstart">
-    Cài đặt, cấu hình và chạy coding-mcp trên máy cục bộ.
+    Cài đặt, cấu hình và kết nối agent đầu tiên.
   </Card>
-  <Card title="Phát triển" icon="code" href="/vi/development">
-    Build, test và xác thực thay đổi trong repository.
+  <Card title="Giao diện MCP" icon="terminal" href="/vi/api-reference/introduction">
+    Tham chiếu đầy đủ cho tools, resources và prompts.
   </Card>
   <Card title="Phân tích mã nguồn" icon="binary" href="/vi/architecture/source-code-analysis">
     Tìm hiểu boundary service và luồng xử lý request.
   </Card>
-  <Card title="Giao diện MCP" icon="terminal" href="/vi/api-reference/introduction">
-    Xem tools, resources và prompts.
+  <Card title="Phát triển" icon="code" href="/vi/development">
+    Build, test và xác thực thay đổi trong repository.
   </Card>
 </CardGroup>
 
 ## Khả năng cốt lõi
 
-- Khám phá nhiều root dự án và lưu registry bền vững
-- File CRUD an toàn và patching hỗ trợ unified diff hunk
-- Thao tác Git với output có cấu trúc
-- Thực thi command theo allowlist
-- File resources an toàn cho text và binary
-- HTTP auth với role-based access control
-- OpenTelemetry hooks cho request và tool operations
+| Khả năng | Mô tả |
+|----------|-------|
+| Multi-root project registry | Quét một hoặc nhiều thư mục gốc và lưu index dự án để agent truy vấn qua ID ổn định |
+| Thao tác file | Đọc, ghi, tạo, xóa, di chuyển file và apply unified diff hoặc structured edits |
+| Git tự động hóa | Status, diff, branch, commit, push, tag — toàn bộ với output JSON có cấu trúc |
+| Tìm kiếm và phân tích | Tìm theo tên file, grep nội dung bằng regex, cây dự án và tóm tắt stack |
+| Thực thi command an toàn | Build, test và lint tự động phát hiện từ tooling dự án; lệnh tùy ý qua allowlist |
+| File resources an toàn cho binary | File được phục vụ dưới dạng `text` hoặc base64 `blob` theo MIME type |
+| HTTP auth và RBAC | Xác thực bằng API key với vai trò `viewer`, `editor` và `admin` |
+| OpenTelemetry hooks | Spans cho mỗi HTTP request và tool operation |
 
 ## Lộ trình đọc đề xuất
 
-1. Bắt đầu với [Bắt đầu nhanh](/vi/quickstart)
-2. Cấu hình roots và runtime trong [Configuration](/vi/guides/configuration)
-3. Bảo mật HTTP deployment trong [Security and RBAC](/vi/guides/security-rbac)
-4. Khám phá điểm mở rộng trong [Source code analysis](/vi/architecture/source-code-analysis)
+1. Bắt đầu với [Bắt đầu nhanh](/vi/quickstart) để cài đặt và kết nối agent
+2. Cấu hình roots và limits trong [Cấu hình](/vi/guides/configuration)
+3. Bảo mật HTTP deployment trong [Bảo mật và RBAC](/vi/guides/security-rbac)
+4. Xem toàn bộ tham chiếu tool trong [Giao diện MCP](/vi/api-reference/introduction)

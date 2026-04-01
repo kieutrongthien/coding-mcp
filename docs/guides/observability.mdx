@@ -38,16 +38,20 @@ OTEL_EXPORTER_OTLP_HEADERS=authorization=Bearer%20token
 
 Spans emitted:
 
-- `mcp.http.request`
-- `mcp.tool.{operation}`
+| Span | Description |
+|------|-------------|
+| `mcp.http.request` | Emitted for every HTTP request received by the server |
+| `mcp.tool.{operation}` | Emitted for each tool execution, named after the operation |
 
 ## HTTP monitoring endpoints
 
-When HTTP transport is enabled, use these endpoints for service monitoring:
+When HTTP transport is enabled:
 
-- `GET /healthz` for liveness checks
-- `GET /readyz` for readiness checks with indexed project count
-- `GET /metrics` for basic request metrics (`request_count`, `error_count`, latency summary)
+| Endpoint | Description |
+|----------|-------------|
+| `GET /healthz` | Liveness check — returns `ok` when the server is running |
+| `GET /readyz` | Readiness check — returns `ok` with the number of indexed projects |
+| `GET /metrics` | Basic metrics: `request_count`, `error_count`, and latency summary |
 
 ## Troubleshooting
 

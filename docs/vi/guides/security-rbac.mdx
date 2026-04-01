@@ -25,18 +25,22 @@ x-api-key: editor-key
 
 ## Vai trò
 
-- `viewer`: thao tác thiên về đọc
-- `editor`: đọc + phần lớn thao tác ghi/build/test
-- `admin`: toàn quyền, gồm cả thao tác phá hủy
+| Vai trò | Quyền hạn |
+|---------|-----------|
+| `viewer` | Thao tác đọc (list, read, search, status) |
+| `editor` | Quyền viewer + ghi không phá hủy, build và test |
+| `admin` | Toàn quyền, bao gồm thao tác phá hủy (delete, restore, force push) |
 
 ## Kiểm soát bảo mật trong codebase
 
-- Chống path traversal
-- Resolve path trong boundary của project
-- Chặn mutation trên protected paths
-- Confirm flags cho thao tác phá hủy
-- Command allowlist và kiểm tra an toàn args
-- Giới hạn kích thước output và file
+| Kiểm soát | Mô tả |
+|-----------|-------|
+| Chống path traversal | Mọi path đều được resolve trong boundary root của project |
+| Chặn protected-path | Các `PROTECTED_PATHS` đã cấu hình không thể bị mutation |
+| Confirm flags | Thao tác phá hủy yêu cầu `confirm: true` tường minh |
+| Command allowlist | Chỉ lệnh trong `ALLOWED_COMMANDS` mới được thực thi |
+| Giới hạn kích thước output | Output của command và resource bị cắt tại `MAX_OUTPUT_SIZE` |
+| Khóa theo project | Thao tác mutation dùng lock theo từng project để tránh race condition |
 
 ## Khuyến nghị vận hành
 
