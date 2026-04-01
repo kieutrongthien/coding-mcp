@@ -49,24 +49,29 @@ jobs:
             range="${current_tag}"
           fi
 
-          mapfile -t commits < <(git log "$range" --pretty=format:'%s')
+          mapfile -t commits < <(git log "$range" --pretty=format:'%H%x09%s')
 
           whats_new=()
           whats_changed=()
           declare -A seen_subjects=()
           prefix_regex='^(feat|enhancement|breaking-change)(\([^)]*\))?(!)?:[[:space:]]+'
+          repo_url="https://github.com/${GITHUB_REPOSITORY}"
 
-          for subject in "${commits[@]}"; do
+          for commit_line in "${commits[@]}"; do
+            sha="${commit_line%%$'\t'*}"
+            subject="${commit_line#*$'\t'}"
             [[ -z "$subject" ]] && continue
+            [[ "$sha" == "$commit_line" ]] && continue
             if [[ -n "${seen_subjects[$subject]:-}" ]]; then
               continue
             fi
             seen_subjects[$subject]=1
+            entry="$subject ${repo_url}/commit/${sha}"
 
             if [[ "$subject" =~ $prefix_regex ]]; then
-              whats_new+=("$subject")
+              whats_new+=("$entry")
             else
-              whats_changed+=("$subject")
+              whats_changed+=("$entry")
             fi
           done
 
