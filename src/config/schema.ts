@@ -30,6 +30,8 @@ export const appConfigSchema = z
     maxFileSize: z.number().int().positive().default(1024 * 1024),
     maxOutputSize: z.number().int().positive().default(128 * 1024),
     commandTimeoutMs: z.number().int().positive().default(120_000),
+    retryMaxAttempts: z.number().int().positive().default(2),
+    retryBaseDelayMs: z.number().int().positive().default(200),
     allowedCommands: z.array(z.string()).default([]),
     protectedPaths: z.array(z.string()).default([]),
     logLevel: z.string().default("info"),

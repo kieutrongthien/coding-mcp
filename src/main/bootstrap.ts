@@ -66,7 +66,9 @@ export function bootstrap(configPath?: string, overrides?: ConfigOverrides): App
 
   const git = new GitService(new GitRunner(), {
     timeoutMs: config.commandTimeoutMs,
-    maxOutputSize: config.maxOutputSize
+    maxOutputSize: config.maxOutputSize,
+    retryMaxAttempts: config.retryMaxAttempts,
+    retryBaseDelayMs: config.retryBaseDelayMs
   });
 
   const commands = new CommandRunnerService(new CommandPolicy({ allowedCommands: config.allowedCommands }));

@@ -143,6 +143,7 @@ Core settings:
 - `ENABLE_HTTP`, `ENABLE_STDIO`
 - `HTTP_HOST`, `HTTP_PORT`, `HTTP_MODE`
 - `MAX_FILE_SIZE`, `MAX_OUTPUT_SIZE`, `COMMAND_TIMEOUT_MS`
+- `RETRY_MAX_ATTEMPTS`, `RETRY_BASE_DELAY_MS`
 - `ALLOWED_COMMANDS`, `PROTECTED_PATHS`
 - `LOG_LEVEL`
 - `REGISTRY_FILE`, `AUDIT_LOG_FILE`, `HTTP_REQUEST_LOG_FILE`
@@ -197,6 +198,14 @@ Emitted spans:
 
 - `mcp.http.request`
 - `mcp.tool.{operation}`
+
+## HTTP Monitoring Endpoints
+
+When HTTP transport is enabled, these endpoints are available:
+
+- `GET /healthz`: liveness status
+- `GET /readyz`: readiness status and indexed project count
+- `GET /metrics`: basic metrics (`request_count`, `error_count`, latency summary)
 
 ## MCP Resources
 

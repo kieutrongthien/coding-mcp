@@ -5,6 +5,8 @@ import { assertGitSuccess, validateCommitMessage } from "./git-helpers.js";
 export interface GitServiceOptions {
   timeoutMs: number;
   maxOutputSize: number;
+  retryMaxAttempts: number;
+  retryBaseDelayMs: number;
 }
 
 export class GitService {
@@ -18,7 +20,9 @@ export class GitService {
       projectPath: project.absolute_path,
       args,
       timeoutMs: this.options.timeoutMs,
-      maxOutputSize: this.options.maxOutputSize
+      maxOutputSize: this.options.maxOutputSize,
+      retryMaxAttempts: this.options.retryMaxAttempts,
+      retryBaseDelayMs: this.options.retryBaseDelayMs
     });
   }
 

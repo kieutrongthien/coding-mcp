@@ -6,6 +6,7 @@ import type { AppServices } from "./bootstrap.js";
 import { createMcpServer } from "../mcp/server.js";
 import { runWithAuthContext } from "../services/auth/auth-context.js";
 import { SecurityError } from "../core/errors.js";
+import { HttpMetrics } from "../core/http-metrics.js";
 
 export async function startHttpServer(services: AppServices): Promise<void> {
   if (!services.config.enableHttp) {
@@ -15,6 +16,8 @@ export async function startHttpServer(services: AppServices): Promise<void> {
 
   const server = createMcpServer(services);
   const transport = await createTransportByMode(services.config.httpMode);
+  const startedAt = Date.now();
+  const metrics = new HttpMetrics();
 
   await server.connect(transport);
   ensureParentDir(services.config.httpRequestLogFile);
@@ -24,11 +27,13 @@ export async function startHttpServer(services: AppServices): Promise<void> {
     const requestStartedAt = Date.now();
     const requestPath = req.url ?? "";
     const requestMethod = req.method ?? "";
+    const parsedUrl = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
 
     services.logger.info({ request_id: requestId, method: requestMethod, path: requestPath }, "HTTP request received");
 
     res.once("finish", () => {
       const durationMs = Date.now() - requestStartedAt;
+      metrics.recordRequest({ statusCode: res.statusCode, durationMs });
       services.logger.info(
         {
           request_id: requestId,
@@ -55,6 +60,46 @@ export async function startHttpServer(services: AppServices): Promise<void> {
         response_headers: res.getHeaders()
       });
     });
+
+    if (req.method === "GET" && parsedUrl.pathname === "/healthz") {
+      res.statusCode = 200;
+      res.setHeader("content-type", "application/json");
+      res.end(
+        JSON.stringify({
+          ok: true,
+          status: "healthy",
+          uptime_s: Math.floor(process.uptime())
+        })
+      );
+      return;
+    }
+
+    if (req.method === "GET" && parsedUrl.pathname === "/readyz") {
+      const projectsCount = services.projectRegistry.listProjects().length;
+      res.statusCode = 200;
+      res.setHeader("content-type", "application/json");
+      res.end(
+        JSON.stringify({
+          ok: true,
+          status: "ready",
+          projects_count: projectsCount,
+          uptime_s: Math.floor((Date.now() - startedAt) / 1000)
+        })
+      );
+      return;
+    }
+
+    if (req.method === "GET" && parsedUrl.pathname === "/metrics") {
+      res.statusCode = 200;
+      res.setHeader("content-type", "application/json");
+      res.end(
+        JSON.stringify({
+          ok: true,
+          ...metrics.snapshot()
+        })
+      );
+      return;
+    }
 
     try {
       const auth = services.authz.authenticateHttpRequest(req.headers);

@@ -4,16 +4,32 @@ import fs from "node:fs";
 import { ValidationError } from "../../core/errors.js";
 import type { CommandResult } from "../../core/types.js";
 import { truncateText } from "../../core/policies.js";
+import { isTransientError, retryWithBackoff } from "../../core/retry.js";
 
 export interface GitRunInput {
   projectPath: string;
   args: string[];
   timeoutMs: number;
   maxOutputSize: number;
+  retryMaxAttempts: number;
+  retryBaseDelayMs: number;
 }
 
 export class GitRunner {
   async run(input: GitRunInput): Promise<CommandResult> {
+    assertGitRepo(input.projectPath);
+
+    return await retryWithBackoff(
+      async () => await this.runOnce(input),
+      isTransientError,
+      {
+        maxAttempts: input.retryMaxAttempts,
+        baseDelayMs: input.retryBaseDelayMs
+      }
+    );
+  }
+
+  private async runOnce(input: GitRunInput): Promise<CommandResult> {
     assertGitRepo(input.projectPath);
 
     const startedAt = Date.now();

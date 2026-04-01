@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import type { CommandResult } from "../../core/types.js";
 import { truncateText } from "../../core/policies.js";
 import { CommandPolicy } from "./command-policy.js";
+import { isTransientError, retryWithBackoff } from "../../core/retry.js";
 
 export interface RunCommandInput {
   command: string;
@@ -9,6 +10,8 @@ export interface RunCommandInput {
   cwd: string;
   timeoutMs: number;
   maxOutputSize: number;
+  retryMaxAttempts: number;
+  retryBaseDelayMs: number;
 }
 
 export class CommandRunnerService {
@@ -18,6 +21,17 @@ export class CommandRunnerService {
     this.policy.assertAllowed(input.command);
     this.policy.assertArgsSafe(input.args);
 
+    return await retryWithBackoff(
+      async () => await this.runOnce(input),
+      isTransientError,
+      {
+        maxAttempts: input.retryMaxAttempts,
+        baseDelayMs: input.retryBaseDelayMs
+      }
+    );
+  }
+
+  private async runOnce(input: RunCommandInput): Promise<CommandResult> {
     const startedAt = Date.now();
 
     return await new Promise<CommandResult>((resolve, reject) => {

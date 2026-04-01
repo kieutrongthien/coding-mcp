@@ -27,7 +27,9 @@ export function registerCommandTools(server: any, services: AppServices): void {
         args: args.args,
         cwd: args.cwd ? `${project.absolute_path}/${args.cwd}` : project.absolute_path,
         timeoutMs: args.timeout_ms ?? services.config.commandTimeoutMs,
-        maxOutputSize: services.config.maxOutputSize
+        maxOutputSize: services.config.maxOutputSize,
+        retryMaxAttempts: services.config.retryMaxAttempts,
+        retryBaseDelayMs: services.config.retryBaseDelayMs
       });
 
       return {
@@ -50,7 +52,9 @@ async function runAlias(services: AppServices, projectId: string, operation: str
       args,
       cwd: project.absolute_path,
       timeoutMs: services.config.commandTimeoutMs,
-      maxOutputSize: services.config.maxOutputSize
+      maxOutputSize: services.config.maxOutputSize,
+      retryMaxAttempts: services.config.retryMaxAttempts,
+      retryBaseDelayMs: services.config.retryBaseDelayMs
     });
 
     return {

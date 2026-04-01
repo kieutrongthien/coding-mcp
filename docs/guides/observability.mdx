@@ -41,6 +41,14 @@ Spans emitted:
 - `mcp.http.request`
 - `mcp.tool.{operation}`
 
+## HTTP monitoring endpoints
+
+When HTTP transport is enabled, use these endpoints for service monitoring:
+
+- `GET /healthz` for liveness checks
+- `GET /readyz` for readiness checks with indexed project count
+- `GET /metrics` for basic request metrics (`request_count`, `error_count`, latency summary)
+
 ## Troubleshooting
 
 If traces do not appear:

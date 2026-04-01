@@ -34,6 +34,8 @@ export function loadConfig(configPath?: string, overrides?: ConfigOverrides): Ap
     maxFileSize: parseNumber(process.env.MAX_FILE_SIZE),
     maxOutputSize: parseNumber(process.env.MAX_OUTPUT_SIZE),
     commandTimeoutMs: parseNumber(process.env.COMMAND_TIMEOUT_MS),
+    retryMaxAttempts: parseNumber(process.env.RETRY_MAX_ATTEMPTS),
+    retryBaseDelayMs: parseNumber(process.env.RETRY_BASE_DELAY_MS),
     allowedCommands: parseList(process.env.ALLOWED_COMMANDS),
     protectedPaths: parseList(process.env.PROTECTED_PATHS),
     logLevel: process.env.LOG_LEVEL,
