@@ -1,0 +1,136 @@
+import fs from "node:fs";
+import path from "node:path";
+import YAML from "yaml";
+import { ValidationError } from "../core/errors.js";
+import { appConfigSchema, type AppConfig } from "./schema.js";
+
+export interface ConfigOverrides {
+  projectsRoots?: string[];
+  httpHost?: string;
+  httpPort?: number;
+  httpMode?: "streamable" | "sse";
+}
+
+export function loadConfig(configPath?: string, overrides?: ConfigOverrides): AppConfig {
+  const fileConfig = configPath ? loadFileConfig(configPath) : {};
+
+  const projectsRootsFromEnv = parseList(process.env.PROJECTS_ROOTS);
+  const legacyProjectRoot = process.env.PROJECTS_ROOT;
+
+  const envConfig = {
+    projectsRoots: projectsRootsFromEnv ?? (legacyProjectRoot ? [legacyProjectRoot] : undefined),
+    enableHttp: parseBoolean(process.env.ENABLE_HTTP),
+    enableStdio: parseBoolean(process.env.ENABLE_STDIO),
+    httpHost: process.env.HTTP_HOST,
+    httpPort: parseNumber(process.env.HTTP_PORT),
+    httpMode: parseHttpMode(process.env.HTTP_MODE),
+    maxFileSize: parseNumber(process.env.MAX_FILE_SIZE),
+    maxOutputSize: parseNumber(process.env.MAX_OUTPUT_SIZE),
+    commandTimeoutMs: parseNumber(process.env.COMMAND_TIMEOUT_MS),
+    allowedCommands: parseList(process.env.ALLOWED_COMMANDS),
+    protectedPaths: parseList(process.env.PROTECTED_PATHS),
+    logLevel: process.env.LOG_LEVEL,
+    registryFile: process.env.REGISTRY_FILE,
+    auditLogFile: process.env.AUDIT_LOG_FILE,
+    debugMode: parseBoolean(process.env.DEBUG_MODE)
+  };
+
+  const merged = {
+    ...fileConfig,
+    ...removeUndefined(envConfig),
+    ...removeUndefined(overrides ?? {})
+  };
+
+  const parsed = appConfigSchema.safeParse(merged);
+  if (!parsed.success) {
+    throw new ValidationError("Invalid configuration", {
+      issues: parsed.error.flatten()
+    });
+  }
+
+  const normalized = parsed.data;
+  return {
+    ...normalized,
+    projectsRoots: normalized.projectsRoots.map((entry) => normalizeUserPath(entry)),
+    registryFile: normalizeUserPath(normalized.registryFile),
+    auditLogFile: normalizeUserPath(normalized.auditLogFile)
+  };
+}
+
+function loadFileConfig(configPath: string): Record<string, unknown> {
+  const absolute = path.resolve(configPath);
+  if (!fs.existsSync(absolute)) {
+    throw new ValidationError("Config file does not exist", { configPath: absolute });
+  }
+
+  const content = fs.readFileSync(absolute, "utf8");
+  if (absolute.endsWith(".yaml") || absolute.endsWith(".yml")) {
+    return (YAML.parse(content) as Record<string, unknown>) ?? {};
+  }
+
+  if (absolute.endsWith(".json")) {
+    return (JSON.parse(content) as Record<string, unknown>) ?? {};
+  }
+
+  throw new ValidationError("Unsupported config format", { configPath: absolute });
+}
+
+function parseBoolean(value: string | undefined): boolean | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  return ["1", "true", "yes", "on"].includes(value.toLowerCase());
+}
+
+function parseNumber(value: string | undefined): number | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function parseList(value: string | undefined): string[] | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  return value
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
+function parseHttpMode(value: string | undefined): "streamable" | "sse" | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  return value === "sse" ? "sse" : "streamable";
+}
+
+function removeUndefined<T extends object>(input: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(input as Record<string, unknown>).filter(([, value]) => value !== undefined)
+  ) as Partial<T>;
+}
+
+function normalizeUserPath(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return trimmed;
+  }
+
+  const home = process.env.USERPROFILE || process.env.HOME || process.env.HOMEPATH;
+  if (trimmed === "~" && home) {
+    return path.resolve(home);
+  }
+
+  if ((trimmed.startsWith("~/") || trimmed.startsWith("~\\")) && home) {
+    return path.resolve(home, trimmed.slice(2));
+  }
+
+  return path.resolve(trimmed);
+}

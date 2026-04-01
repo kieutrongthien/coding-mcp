@@ -1,0 +1,43 @@
+{
+  "name": "coding-mcp",
+  "version": "0.1.0",
+  "description": "Production-ready multi-project MCP server for coding agents",
+  "type": "module",
+  "main": "dist/main/stdio.js",
+  "bin": {
+    "coding-mcp": "dist/main/cli.js"
+  },
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev:serve": "tsx src/main/cli.ts",
+    "dev:stdio": "tsx src/main/stdio.ts",
+    "dev:http": "tsx src/main/http.ts",
+    "start:serve": "node dist/main/cli.js",
+    "start:stdio": "node dist/main/stdio.js",
+    "start:http": "node dist/main/http.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.13.2",
+    "fast-glob": "^3.3.3",
+    "mime-types": "^2.1.35",
+    "pino": "^9.7.0",
+    "undici": "^7.13.0",
+    "yaml": "^2.8.0",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@types/mime-types": "^2.1.4",
+    "@types/node": "^22.15.17",
+    "eslint": "^9.26.0",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.2"
+  }
+}
