@@ -1,0 +1,163 @@
+---
+title: "Source code analysis"
+description: "Understand the coding-mcp architecture, execution flow, and extension points."
+---
+
+<Info>
+  This page explains how the current codebase is structured and where to add new behavior safely.
+</Info>
+
+## System overview
+
+`coding-mcp` is organized as a layered TypeScript service with one shared application core and two transports.
+
+- `src/config`: validates and normalizes runtime configuration
+- `src/core`: shared contracts (errors, responses, logging, telemetry, locks)
+- `src/services`: domain services (registry, filesystem, patch, git, commands, auth)
+- `src/mcp`: MCP server setup with tool/resource/prompt registries
+- `src/main`: bootstrap and transport entrypoints (`stdio`, `http`, `cli`)
+
+## Bootstrap and dependency wiring
+
+The application starts in `src/main/bootstrap.ts`.
+
+You can treat this file as the service container for the project:
+
+1. Load and validate config
+2. Construct infrastructure services
+3. Construct domain services
+4. Return `AppServices` for transports and MCP registries
+
+Key wiring points:
+
+- Project indexing is initialized through `ProjectRegistryService`
+- Safety controls are applied through `PathGuard`, command policy, and lock manager
+- Auth and telemetry are attached once in bootstrap, then reused everywhere
+
+## Request flow
+
+For HTTP transport, requests flow through these stages:
+
+1. `src/main/http-server.ts` authenticates request headers when auth is enabled
+2. Auth context is attached for downstream authorization
+3. MCP transport forwards calls to registered handlers
+4. `executeOperation` in `src/mcp/tools/tool-helpers.ts` runs RBAC checks and wraps execution in a response envelope
+5. Services perform the operation and return structured data
+
+For STDIO transport, the flow is the same minus HTTP header authentication.
+
+## MCP registration model
+
+`src/mcp/server.ts` creates the MCP server and registers:
+
+- Tools from `src/mcp/tools`
+- Resources from `src/mcp/resources`
+- Prompts from `src/mcp/prompts`
+
+Each tool handler should:
+
+- Validate input with zod schemas in `src/mcp/schemas`
+- Delegate to a service
+- Return consistent envelope data
+
+## Project registry and multi-root behavior
+
+The registry is implemented in:
+
+- `src/services/project-registry/project-registry.service.ts`
+- `src/services/project-registry/project-scanner.ts`
+- `src/services/project-registry/registry-store-json.ts`
+
+Current behavior:
+
+- Supports multiple roots (`PROJECTS_ROOTS`)
+- Persists roots and discovered projects
+- Supports CLI root management via:
+  - `coding-mcp init`
+  - `coding-mcp add <folder>`
+  - `coding-mcp remove <folder>`
+
+## Safety model
+
+Safety controls are implemented by default in service boundaries.
+
+<Warning>
+  Avoid bypassing service-layer guards in new code. Add behavior through existing services and validation schemas.
+</Warning>
+
+Core controls:
+
+- Path traversal prevention and project-root boundary checks
+- Protected path enforcement for mutations
+- Confirm flags for destructive operations
+- Allowlist-only command execution with arg checks
+- Timeout and output/file size limits
+- Per-project lock for mutating operations
+- Audit log entries for file mutations
+
+## Auth and RBAC
+
+HTTP deployments can require API keys with role-based operation permissions.
+
+Roles:
+
+- `viewer`: read-oriented operations
+- `editor`: read + most write/build/test operations
+- `admin`: full operation set
+
+Authorization is enforced in `executeOperation` before the service action runs.
+
+## Telemetry and observability
+
+OpenTelemetry spans are emitted when enabled:
+
+- `mcp.http.request`
+- `mcp.tool.{operation}`
+
+Pino logging and audit logs continue to provide operational traces for incidents and debugging.
+
+## File and patch operations
+
+The file layer in `src/services/filesystem/filesystem.service.ts` implements:
+
+- Directory listing and file reads
+- Safe writes, deletes, and moves
+- Content search and project tree
+- Binary-safe resource reads (text or base64 blob)
+
+Patch support in `src/services/patch` includes:
+
+- Structured edit operations
+- Unified diff hunk parsing and application
+- Conflict reporting for non-matching hunks
+
+## How to add a new tool safely
+
+<Steps>
+  <Step title="Define schema">
+    Add input validation in `src/mcp/schemas`.
+  </Step>
+  <Step title="Implement service logic">
+    Add behavior in a service module under `src/services`.
+  </Step>
+  <Step title="Register the tool handler">
+    Register in the correct file under `src/mcp/tools` and call `executeOperation`.
+  </Step>
+  <Step title="Add tests">
+    Add unit and integration coverage for success and failure paths.
+  </Step>
+  <Step title="Update docs">
+    Update docs pages and config examples for any user-facing change.
+  </Step>
+</Steps>
+
+## Recommended next deep-dive pages
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" href="/quickstart" icon="rocket">
+    Run the server locally and verify your setup.
+  </Card>
+  <Card title="Development" href="/development" icon="code">
+    Use the local preview workflow and validation commands.
+  </Card>
+</CardGroup>

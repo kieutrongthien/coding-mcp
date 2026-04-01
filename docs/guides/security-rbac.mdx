@@ -1,0 +1,46 @@
+---
+title: "Security and RBAC"
+description: "Secure HTTP deployments with API keys and role-based access control."
+---
+
+For HTTP deployments, enable API-key auth and role-based authorization.
+
+<Warning>
+  Do not expose HTTP transport publicly without `ENABLE_AUTH=true`.
+</Warning>
+
+## Enable auth
+
+```bash
+ENABLE_AUTH=true
+AUTH_HEADER_NAME=x-api-key
+AUTH_API_KEYS=viewer-key:viewer:viewer1,editor-key:editor:editor1,admin-key:admin:admin1
+```
+
+Clients must send the configured auth header:
+
+```http
+x-api-key: editor-key
+```
+
+## Roles
+
+- `viewer`: read-oriented operations
+- `editor`: read + most write/build/test operations
+- `admin`: full access including destructive operations
+
+## Security controls in the codebase
+
+- Path traversal prevention
+- Project-boundary path resolution
+- Protected-path mutation blocking
+- Confirmation flags for destructive operations
+- Command allowlist and argument safety checks
+- Output and file size limits
+
+## Operational recommendations
+
+- Rotate API keys regularly
+- Use separate keys per environment
+- Keep admin keys scoped to trusted automation
+- Enable telemetry for request auditing

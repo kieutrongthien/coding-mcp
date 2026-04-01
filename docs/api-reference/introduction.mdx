@@ -3,31 +3,51 @@ title: 'Introduction'
 description: 'Example section for showcasing API endpoints'
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+title: "MCP interface overview"
+description: "Understand tools, resources, prompts, and response contracts."
 
-## Welcome
+The server exposes MCP capabilities in three groups:
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+- Tools: project operations, file editing, search, git, and command execution
+- Resources: project tree, files, metadata, and status
+- Prompts: reusable coding workflow prompts
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+## Response envelope
 
-## Authentication
-
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+Successful operation:
 
 ```json
-"security": [
-  {
-    "bearerAuth": []
+{
+  "ok": true,
+  "operation": "read_file",
+  "project_id": "abc123",
+  "data": {},
+  "warnings": [],
+  "errors": [],
+  "request_id": "uuid",
+  "duration_ms": 12
+}
+```
+
+Failed operation:
+
+```json
+{
+  "ok": false,
+  "operation": "write_file",
+  "error_code": "SECURITY_ERROR",
+  "message": "Operation blocked for protected path",
+  "details": {}
+}
+```
+
+## Where handlers are implemented
+
+- `src/mcp/tools/*`
+- `src/mcp/resources/*`
+- `src/mcp/prompts/*`
+
+Use the reference pages in this tab to review capability coverage.
   }
 ]
 ```

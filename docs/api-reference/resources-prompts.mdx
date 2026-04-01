@@ -1,0 +1,36 @@
+---
+title: "Resources and prompts"
+description: "Reference for available MCP resources and prompt templates."
+---
+
+## Resources
+
+- `project://index`
+- `project://{project_id}/tree`
+- `project://{project_id}/package-json`
+- `project://{project_id}/readme`
+- `project://{project_id}/git-status`
+- `project://file/{project_id}/{path}`
+- `project://file-meta/{project_id}/{path}`
+
+### File resource behavior
+
+- Text files are returned through `text`
+- Binary files are returned through base64 `blob`
+- Payloads are bounded by configured output limits
+
+## Prompts
+
+- `analyze-project`
+- `implement-task`
+- `explain-file`
+- `generate-commit-message`
+- `review-diff`
+- `fix-test-failures`
+
+Each prompt accepts structured arguments and returns prompt messages suitable for MCP clients.
+
+## Implementation map
+
+- Resources: `src/mcp/resources/project.resources.ts`
+- Prompts: `src/mcp/prompts/workflow.prompts.ts`

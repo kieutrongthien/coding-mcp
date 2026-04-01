@@ -1,97 +1,40 @@
 ---
 title: "Introduction"
-description: "Welcome to the new home for your documentation"
+description: "Overview of coding-mcp and how to use it in production workflows."
 ---
 
-## Setting up
+`coding-mcp` is a multi-project MCP server for coding agents. It provides safe file and git automation, consistent structured responses, HTTP/STDIO transports, API-key RBAC, and OpenTelemetry hooks.
 
-Get your documentation site up and running in minutes.
+Use this documentation to set up the server, understand architecture, and extend tools safely.
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Install, configure, and run coding-mcp locally.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Development" icon="code" href="/development">
+    Build, test, and validate changes in the repository.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Source code analysis" icon="binary" href="/architecture/source-code-analysis">
+    Learn service boundaries and request flow.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="MCP interface" icon="terminal" href="/api-reference/introduction">
+    Review tools, resources, and prompts.
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## Core capabilities
 
-Everything you need to create world-class documentation.
+- Multi-root project discovery and persistent registry
+- Safe file CRUD and patching with unified diff hunk support
+- Git operations with structured output
+- Allowlist-based command execution
+- Binary-safe file resources for text and binary payloads
+- HTTP auth with role-based access control
+- OpenTelemetry hooks for requests and tool operations
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+## Recommended reading path
 
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+1. Start with [Quickstart](/quickstart)
+2. Configure roots and runtime in [Configuration](/guides/configuration)
+3. Secure HTTP deployments in [Security and RBAC](/guides/security-rbac)
+4. Explore extension points in [Source code analysis](/architecture/source-code-analysis)

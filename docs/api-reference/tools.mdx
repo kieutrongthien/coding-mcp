@@ -1,0 +1,59 @@
+---
+title: "Tools"
+description: "Tool coverage for project, file, search, git, and command workflows."
+---
+
+## Project tools
+
+- `list_projects`
+- `get_project`
+- `refresh_project_index`
+- `summarize_project`
+
+## File and directory tools
+
+- `list_directory`
+- `read_file`
+- `read_multiple_files`
+- `create_file`
+- `write_file`
+- `replace_in_file`
+- `apply_patch`
+- `delete_file`
+- `move_file`
+
+## Search and analysis tools
+
+- `search_files`
+- `grep_content`
+- `get_project_tree`
+- `summarize_project`
+
+## Git tools
+
+- `git_status`
+- `git_diff`
+- `git_branch_list`
+- `git_checkout_new_branch`
+- `git_checkout_branch`
+- `git_pull`
+- `git_add`
+- `git_restore`
+- `git_commit`
+- `git_push`
+- `git_log`
+- `git_show`
+- `git_create_tag`
+
+## Command tools
+
+- `run_build`
+- `run_test`
+- `run_lint`
+- `run_command_safe`
+
+## Notes
+
+- Destructive operations require explicit confirm flags.
+- All tool operations are validated with zod schemas.
+- HTTP mode enforces role-based authorization when auth is enabled.

@@ -1,0 +1,56 @@
+---
+title: "CLI and registry"
+description: "Manage project roots and run coding-mcp from the CLI."
+---
+
+The CLI supports transport startup and persistent registry root management.
+
+## Commands
+
+```bash
+coding-mcp serve [options]
+coding-mcp init [folder]
+coding-mcp add <folder>
+coding-mcp remove <folder>
+```
+
+## Root management
+
+`init` resets roots to one folder and performs a full scan.
+
+```bash
+coding-mcp init /projects
+```
+
+`add` appends a root and rescans.
+
+```bash
+coding-mcp add /srv/repos
+```
+
+`remove` deletes a root and rescans remaining roots.
+
+```bash
+coding-mcp remove /srv/repos
+```
+
+All operations persist to the registry JSON file.
+
+## Serve options
+
+```bash
+coding-mcp serve --transport http --host 0.0.0.0 --port 3000 --mode streamable
+```
+
+Common options:
+
+- `--transport <http|stdio>`
+- `--host <host>`
+- `--port <port>`
+- `--mode <streamable|sse>`
+- `--projects-root <path>` (repeatable)
+- `--config <path>`
+
+## Structured output
+
+`init`, `add`, and `remove` return structured JSON payloads so agents can parse results programmatically.

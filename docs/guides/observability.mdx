@@ -1,0 +1,50 @@
+---
+title: "Observability"
+description: "Logging, audit events, and OpenTelemetry tracing in coding-mcp."
+---
+
+`coding-mcp` provides three observability layers:
+
+- Structured logs (Pino)
+- Audit logs for mutating operations
+- OpenTelemetry trace hooks
+
+## Logging
+
+Set `LOG_LEVEL` to control verbosity.
+
+```bash
+LOG_LEVEL=info
+```
+
+## Audit log
+
+Mutating operations are appended to the audit log file.
+
+```bash
+AUDIT_LOG_FILE=~/.coding-mcp/audit.log
+```
+
+## OpenTelemetry
+
+Enable OTLP export:
+
+```bash
+ENABLE_OTEL=true
+OTEL_SERVICE_NAME=coding-mcp
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318/v1/traces
+OTEL_EXPORTER_OTLP_HEADERS=authorization=Bearer%20token
+```
+
+Spans emitted:
+
+- `mcp.http.request`
+- `mcp.tool.{operation}`
+
+## Troubleshooting
+
+If traces do not appear:
+
+1. Verify exporter endpoint reachability
+2. Verify OTLP headers format (`key=value,key2=value2`)
+3. Check server logs for initialization errors
