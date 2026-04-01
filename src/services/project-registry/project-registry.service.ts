@@ -32,14 +32,17 @@ export class ProjectRegistryService {
   }
 
   listRoots(): string[] {
-    return [...this.roots].sort((a, b) => a.localeCompare(b));
+    this.syncFromStoreIfChanged();
+    return this.getSortedRoots();
   }
 
   listProjects(): ProjectMetadata[] {
+    this.syncFromStoreIfChanged();
     return [...this.projects.values()].sort((a, b) => a.name.localeCompare(b.name));
   }
 
   getProject(projectId: string): ProjectMetadata {
+    this.syncFromStoreIfChanged();
     const project = this.projects.get(projectId);
     if (!project) {
       throw new NotFoundError("Project not found", { projectId });
@@ -53,7 +56,7 @@ export class ProjectRegistryService {
 
     if (!projectId) {
       this.projects = new Map(scanned.map((project) => [project.id, project]));
-      this.store.save(this.listRoots(), [...this.projects.values()]);
+      this.store.save(this.getSortedRoots(), [...this.projects.values()]);
       return { refreshed: scanned.length, projects: this.listProjects() };
     }
 
@@ -63,7 +66,7 @@ export class ProjectRegistryService {
     }
 
     this.projects.set(found.id, found);
-    this.store.save(this.listRoots(), [...this.projects.values()]);
+    this.store.save(this.getSortedRoots(), [...this.projects.values()]);
     return { refreshed: 1, projects: [found] };
   }
 
@@ -74,7 +77,7 @@ export class ProjectRegistryService {
     this.scanner.setRoots([normalized]);
     const refreshed = this.refresh();
     return {
-      roots: this.listRoots(),
+      roots: this.getSortedRoots(),
       refreshed: refreshed.refreshed,
       projects: refreshed.projects
     };
@@ -84,10 +87,10 @@ export class ProjectRegistryService {
     const normalized = path.resolve(root);
     this.assertRootExists(normalized);
     this.roots.add(normalized);
-    this.scanner.setRoots(this.listRoots());
+    this.scanner.setRoots(this.getSortedRoots());
     const refreshed = this.refresh();
     return {
-      roots: this.listRoots(),
+      roots: this.getSortedRoots(),
       refreshed: refreshed.refreshed,
       projects: refreshed.projects
     };
@@ -100,10 +103,10 @@ export class ProjectRegistryService {
     }
 
     this.roots.delete(normalized);
-    this.scanner.setRoots(this.listRoots());
+    this.scanner.setRoots(this.getSortedRoots());
     const refreshed = this.refresh();
     return {
-      roots: this.listRoots(),
+      roots: this.getSortedRoots(),
       refreshed: refreshed.refreshed,
       projects: refreshed.projects
     };
@@ -113,5 +116,16 @@ export class ProjectRegistryService {
     if (!fs.existsSync(root) || !fs.statSync(root).isDirectory()) {
       throw new NotFoundError("Root folder not found", { root });
     }
+  }
+
+  private syncFromStoreIfChanged(): void {
+    const persisted = this.store.load();
+    this.projects = new Map(persisted.projects.map((project) => [project.id, project]));
+    this.roots = new Set(persisted.roots.map((root) => path.resolve(root)));
+    this.scanner.setRoots(this.getSortedRoots());
+  }
+
+  private getSortedRoots(): string[] {
+    return [...this.roots].sort((a, b) => a.localeCompare(b));
   }
 }

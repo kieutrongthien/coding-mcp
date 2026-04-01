@@ -36,4 +36,8 @@ export class JsonRegistryStore {
 
     fs.writeFileSync(this.filePath, JSON.stringify(next, null, 2), "utf8");
   }
+
+  getLastModifiedMs(): number {
+    return fs.statSync(this.filePath).mtimeMs;
+  }
 }

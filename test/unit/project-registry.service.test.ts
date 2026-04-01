@@ -67,4 +67,31 @@ describe("ProjectRegistryService roots", () => {
 
     expect(() => service.removeRoot(rootMissing)).toThrowError(NotFoundError);
   });
+
+  it("syncs changes from other process without restart", async () => {
+    const work = fs.mkdtempSync(path.join(os.tmpdir(), "registry-service-"));
+    const rootA = path.join(work, "root-a");
+    const rootB = path.join(work, "root-b");
+
+    fs.mkdirSync(path.join(rootA, "proj1"), { recursive: true });
+    fs.mkdirSync(path.join(rootB, "proj2"), { recursive: true });
+
+    const registryPath = path.join(work, "registry.json");
+    const storeA = new JsonRegistryStore(registryPath);
+    const scannerA = new ProjectScanner([]);
+    const serviceA = new ProjectRegistryService(scannerA, storeA);
+    serviceA.initFromRoot(rootA);
+    expect(serviceA.listProjects().length).toBe(1);
+
+    const storeB = new JsonRegistryStore(registryPath);
+    const scannerB = new ProjectScanner([]);
+    const serviceB = new ProjectRegistryService(scannerB, storeB);
+    serviceB.addRoot(rootB);
+
+    await new Promise((resolve) => setTimeout(resolve, 5));
+
+    const syncedRoots = serviceA.listRoots();
+    expect(syncedRoots).toEqual([path.resolve(rootA), path.resolve(rootB)]);
+    expect(serviceA.listProjects().length).toBe(2);
+  });
 });
