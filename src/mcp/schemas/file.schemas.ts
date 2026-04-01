@@ -48,6 +48,7 @@ export const applyPatchSchema = z.object({
       z.union([
         z.object({ type: z.literal("insert_before"), anchor: z.string(), content: z.string() }),
         z.object({ type: z.literal("insert_after"), anchor: z.string(), content: z.string() }),
+        z.object({ type: z.literal("replace"), find: z.string(), replace: z.string(), replace_all: z.boolean().optional() }),
         z.object({ type: z.literal("replace_exact"), find: z.string(), replace: z.string(), replace_all: z.boolean().optional() }),
         z.object({ type: z.literal("replace_range"), start_line: z.number().int().positive(), end_line: z.number().int().positive(), content: z.string() }),
         z.object({ type: z.literal("delete_range"), start_line: z.number().int().positive(), end_line: z.number().int().positive() })

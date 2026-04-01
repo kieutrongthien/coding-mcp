@@ -3,6 +3,7 @@ import { ValidationError } from "../../core/errors.js";
 export type StructuredEdit =
   | { type: "insert_before"; anchor: string; content: string }
   | { type: "insert_after"; anchor: string; content: string }
+  | { type: "replace"; find: string; replace: string; replace_all?: boolean }
   | { type: "replace_exact"; find: string; replace: string; replace_all?: boolean }
   | { type: "replace_range"; start_line: number; end_line: number; content: string }
   | { type: "delete_range"; start_line: number; end_line: number };
@@ -50,6 +51,7 @@ function applySingle(content: string, edit: StructuredEdit): { content: string; 
       const anchorEnd = index + edit.anchor.length;
       return { content: content.slice(0, anchorEnd) + edit.content + content.slice(anchorEnd), changed: true };
     }
+    case "replace":
     case "replace_exact": {
       if (edit.replace_all) {
         const regex = new RegExp(escapeRegex(edit.find), "g");

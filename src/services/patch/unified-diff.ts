@@ -8,7 +8,7 @@ export interface UnifiedDiffResult {
 
 export function applyUnifiedDiff(original: string, patch: string): UnifiedDiffResult {
   const normalizedPatch = patch.replace(/\r\n/g, "\n");
-  const lines = normalizedPatch.split("\n");
+  const lines = trimTrailingEmptyLines(normalizedPatch.split("\n"));
   const hunks = parseHunks(lines);
 
   if (hunks.length === 0) {
@@ -93,6 +93,12 @@ function parseHunks(lines: string[]): Hunk[] {
       continue;
     }
 
+    if (isDiffMetadataLine(line)) {
+      hunks.push(validateHunk(current));
+      current = null;
+      continue;
+    }
+
     if (line === "\\ No newline at end of file") {
       continue;
     }
@@ -119,6 +125,23 @@ function parseHunks(lines: string[]): Hunk[] {
   }
 
   return hunks;
+}
+
+function trimTrailingEmptyLines(lines: string[]): string[] {
+  const next = [...lines];
+  while (next.length > 0 && next[next.length - 1] === "") {
+    next.pop();
+  }
+  return next;
+}
+
+function isDiffMetadataLine(line: string): boolean {
+  return (
+    line.startsWith("diff --git ") ||
+    line.startsWith("index ") ||
+    line.startsWith("--- ") ||
+    line.startsWith("+++ ")
+  );
 }
 
 function parseHunkHeader(line: string): Omit<Hunk, "lines"> | null {
