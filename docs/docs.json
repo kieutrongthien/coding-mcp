@@ -8,16 +8,6 @@
     "dark": "#15803D"
   },
   "favicon": "/favicon.svg",
-  "redirects": [
-    {
-      "source": "/vi",
-      "destination": "/vi/index"
-    },
-    {
-      "source": "/vi/",
-      "destination": "/vi/index"
-    }
-  ],
   "navigation": {
     "languages": [
       {
@@ -77,7 +67,7 @@
               {
                 "group": "Bắt đầu",
                 "pages": [
-                  "vi/index",
+                  "vi/introduce",
                   "vi/quickstart",
                   "vi/development"
                 ]
