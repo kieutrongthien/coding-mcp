@@ -3,6 +3,11 @@ name: Dependency Review
 on:
   pull_request:
     branches: [main, master]
+    paths:
+      - "package.json"
+      - "package-lock.json"
+      - "yarn.lock"
+      - "pnpm-lock.yaml"
 
 permissions:
   contents: read
