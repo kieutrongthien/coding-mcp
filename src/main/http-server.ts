@@ -15,11 +15,16 @@ export async function startHttpServer(services: AppServices): Promise<void> {
   }
 
   const server = createMcpServer(services);
-  const transport = await createTransportByMode(services.config.httpMode);
+  const streamableTransport =
+    services.config.httpMode === "streamable" ? await createStreamableTransport() : undefined;
+  const sseModule = services.config.httpMode === "sse" ? await import("@modelcontextprotocol/sdk/server/sse.js") : undefined;
+  const sseTransports = new Map<string, unknown>();
   const startedAt = Date.now();
   const metrics = new HttpMetrics();
 
-  await server.connect(transport);
+  if (streamableTransport) {
+    await server.connect(streamableTransport);
+  }
   ensureParentDir(services.config.httpRequestLogFile);
 
   const httpServer = createServer(async (req, res) => {
@@ -113,7 +118,57 @@ export async function startHttpServer(services: AppServices): Promise<void> {
         },
         async () =>
           await runWithAuthContext(auth, async () => {
-            await transport.handleRequest(req, res);
+            if (services.config.httpMode === "streamable") {
+              if (!streamableTransport) {
+                throw new Error("Streamable transport not initialized");
+              }
+
+              await streamableTransport.handleRequest(req, res);
+              return;
+            }
+
+            if (!sseModule) {
+              throw new Error("SSE transport module not initialized");
+            }
+
+            if (req.method === "GET" && parsedUrl.pathname === "/sse") {
+              const transport = new sseModule.SSEServerTransport("/messages", res);
+              sseTransports.set(transport.sessionId, transport);
+
+              res.on("close", () => {
+                sseTransports.delete(transport.sessionId);
+              });
+
+              const sseServer = createMcpServer(services);
+              await sseServer.connect(transport);
+              return;
+            }
+
+            if (req.method === "POST" && parsedUrl.pathname === "/messages") {
+              const sessionId = parsedUrl.searchParams.get("sessionId");
+              if (!sessionId) {
+                res.statusCode = 400;
+                res.end("Missing sessionId parameter");
+                return;
+              }
+
+              const transport = sseTransports.get(sessionId);
+              if (!transport) {
+                res.statusCode = 404;
+                res.end("Session not found");
+                return;
+              }
+
+              await (transport as { handlePostMessage: (req: unknown, res: unknown, parsedBody?: unknown) => Promise<void> }).handlePostMessage(
+                req,
+                res,
+                undefined
+              );
+              return;
+            }
+
+            res.statusCode = 404;
+            res.end("Not found");
           })
       );
     } catch (error) {
@@ -167,15 +222,10 @@ function ensureParentDir(filePath: string): void {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
 }
 
-async function createTransportByMode(mode: "streamable" | "sse"): Promise<any> {
-  if (mode === "streamable") {
-    const streamableModule = await import("@modelcontextprotocol/sdk/server/streamableHttp.js");
-    return new streamableModule.StreamableHTTPServerTransport({
-      // Stateful mode is required when reusing a transport instance across requests.
-      sessionIdGenerator: () => crypto.randomUUID()
-    });
-  }
-
-  const sseModule = await import("@modelcontextprotocol/sdk/server/sse.js");
-  return new sseModule.SSEServerTransport("/sse", undefined as any);
+async function createStreamableTransport() {
+  const streamableModule = await import("@modelcontextprotocol/sdk/server/streamableHttp.js");
+  return new streamableModule.StreamableHTTPServerTransport({
+    // Stateful mode is required when reusing a transport instance across requests.
+    sessionIdGenerator: () => crypto.randomUUID()
+  });
 }
