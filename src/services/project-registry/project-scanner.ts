@@ -4,7 +4,28 @@ import crypto from "node:crypto";
 import type { ProjectMetadata } from "../../core/types.js";
 
 export class ProjectScanner {
-  constructor(private readonly projectsRoots: string[]) {}
+  private projectsRoots: string[];
+
+  constructor(projectsRoots: string[]) {
+    this.projectsRoots = normalizeRoots(projectsRoots);
+  }
+
+  getRoots(): string[] {
+    return [...this.projectsRoots];
+  }
+
+  setRoots(roots: string[]): void {
+    this.projectsRoots = normalizeRoots(roots);
+  }
+
+  addRoot(root: string): void {
+    this.projectsRoots = normalizeRoots([...this.projectsRoots, root]);
+  }
+
+  removeRoot(root: string): void {
+    const normalized = path.resolve(root);
+    this.projectsRoots = this.projectsRoots.filter((entry) => entry !== normalized);
+  }
 
   scan(): ProjectMetadata[] {
     const byId = new Map<string, ProjectMetadata>();
@@ -51,6 +72,11 @@ export class ProjectScanner {
 
     return projects.sort((a, b) => a.name.localeCompare(b.name));
   }
+}
+
+function normalizeRoots(roots: string[]): string[] {
+  const resolved = roots.map((entry) => path.resolve(entry));
+  return [...new Set(resolved)];
 }
 
 function stableProjectId(absolutePath: string): string {

@@ -6,13 +6,14 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { createMcpServer } from "../mcp/server.js";
 
 interface CliArgs {
-  command: "serve";
+  command: "serve" | "init" | "add" | "remove";
   transport: "http" | "stdio";
   host?: string;
   port?: number;
   mode?: "streamable" | "sse";
   projectsRoots?: string[];
   configPath?: string;
+  folder?: string;
 }
 
 async function main() {
@@ -24,6 +25,81 @@ async function main() {
     httpPort: args.port,
     httpMode: args.mode
   });
+
+  if (args.command === "init") {
+    const target = args.folder ?? process.cwd();
+    const result = services.projectRegistry.initFromRoot(target);
+    // eslint-disable-next-line no-console
+    console.log(
+      JSON.stringify(
+        {
+          ok: true,
+          operation: "init",
+          data: {
+            root: target,
+            roots: result.roots,
+            refreshed: result.refreshed,
+            total_projects: result.projects.length
+          }
+        },
+        null,
+        2
+      )
+    );
+    return;
+  }
+
+  if (args.command === "add") {
+    if (!args.folder) {
+      throw new Error("Missing folder argument for add command");
+    }
+
+    const result = services.projectRegistry.addRoot(args.folder);
+    // eslint-disable-next-line no-console
+    console.log(
+      JSON.stringify(
+        {
+          ok: true,
+          operation: "add",
+          data: {
+            added: args.folder,
+            roots: result.roots,
+            refreshed: result.refreshed,
+            total_projects: result.projects.length
+          }
+        },
+        null,
+        2
+      )
+    );
+    return;
+  }
+
+  if (args.command === "remove") {
+    if (!args.folder) {
+      throw new Error("Missing folder argument for remove command");
+    }
+
+    const result = services.projectRegistry.removeRoot(args.folder);
+    // eslint-disable-next-line no-console
+    console.log(
+      JSON.stringify(
+        {
+          ok: true,
+          operation: "remove",
+          data: {
+            removed: args.folder,
+            roots: result.roots,
+            refreshed: result.refreshed,
+            total_projects: result.projects.length
+          }
+        },
+        null,
+        2
+      )
+    );
+    return;
+  }
 
   if (args.transport === "stdio") {
     if (!services.config.enableStdio) {
@@ -47,8 +123,21 @@ function parseCliArgs(argv: string[]): CliArgs {
     process.exit(0);
   }
 
-  const parsed: CliArgs = { command: "serve", transport: "http" };
-  const startIndex = argv[0] === "serve" ? 1 : 0;
+  let command: CliArgs["command"] = "serve";
+  if (argv[0] === "serve" || argv[0] === "init" || argv[0] === "add" || argv[0] === "remove") {
+    command = argv[0];
+  }
+
+  const parsed: CliArgs = { command, transport: "http" };
+  const startIndex = command === "serve" || command === "init" || command === "add" || command === "remove" ? 1 : 0;
+
+  if (
+    (command === "init" || command === "add" || command === "remove") &&
+    argv[startIndex] &&
+    !argv[startIndex].startsWith("-")
+  ) {
+    parsed.folder = argv[startIndex];
+  }
 
   for (let i = startIndex; i < argv.length; i += 1) {
     const current = argv[i];
@@ -109,6 +198,9 @@ function printHelp(): void {
 
 Usage:
   coding-mcp serve [options]
+  coding-mcp init [folder]
+  coding-mcp add <folder>
+  coding-mcp remove <folder>
 
 Options:
   --transport <http|stdio>      Transport mode (default: http)

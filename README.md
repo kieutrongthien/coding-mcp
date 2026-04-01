@@ -64,6 +64,26 @@ npx coding-mcp serve --transport http --host 0.0.0.0 --port 4000 --mode streamab
 coding-mcp serve --transport http --host 0.0.0.0 --port 4000 --mode streamable
 ```
 
+Initialize registry from current projects root:
+
+```bash
+cd /projects
+coding-mcp init
+```
+
+Initialize registry from a specific root:
+
+```bash
+coding-mcp init /projects
+```
+
+Add and remove roots in registry:
+
+```bash
+coding-mcp add /srv/repos
+coding-mcp remove /srv/repos
+```
+
 STDIO:
 
 ```bash
@@ -186,7 +206,9 @@ npm test
 ## Future Improvements
 
 1. Full hunk-level unified diff patch application engine
-2. SQLite registry backend option
-3. OpenTelemetry export hooks
-4. Binary-safe file streaming resource endpoints
-5. Auth/RBAC for exposed HTTP deployments
+2. OpenTelemetry export hooks
+3. Binary-safe file streaming resource endpoints
+4. Auth/RBAC for exposed HTTP deployments
+
+## License
+MIT License
