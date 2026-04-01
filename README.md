@@ -12,6 +12,7 @@ Production-oriented multi-project MCP server for coding agents, designed to mana
 - Binary-safe file resource endpoints (text or base64 blob)
 - Shared business core for STDIO and HTTP transports
 - API-key authentication and RBAC for HTTP deployments
+- OpenTelemetry export hooks for HTTP and tool execution spans
 - Structured JSON response envelope with request IDs and timing
 - Audit logging for mutating operations
 
@@ -120,6 +121,10 @@ Key vars:
 - `PROJECTS_ROOTS` (comma-separated list; preferred)
 - `ENABLE_HTTP`
 - `ENABLE_STDIO`
+- `ENABLE_OTEL`
+- `OTEL_SERVICE_NAME`
+- `OTEL_EXPORTER_OTLP_ENDPOINT`
+- `OTEL_EXPORTER_OTLP_HEADERS` (`key=value,key2=value2`)
 - `ENABLE_AUTH`
 - `AUTH_HEADER_NAME`
 - `AUTH_API_KEYS` (`key:role:id,key2:role:id2`)
@@ -180,6 +185,24 @@ Role model:
 - `editor`: read + non-destructive write/build/test workflows
 - `admin`: full access including destructive operations
 
+## OpenTelemetry Hooks
+
+Enable tracing export for HTTP requests and MCP tool operations.
+
+Example:
+
+```bash
+ENABLE_OTEL=true
+OTEL_SERVICE_NAME=coding-mcp
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318/v1/traces
+OTEL_EXPORTER_OTLP_HEADERS=authorization=Bearer%20token
+```
+
+Spans emitted:
+
+- `mcp.http.request`
+- `mcp.tool.{operation}`
+
 ## Example MCP Client Config
 
 ### Cursor (STDIO)
@@ -238,11 +261,6 @@ Implemented tools include project discovery, file/directory operations, search/a
 ```bash
 npm test
 ```
-
-## Future Improvements
-
-1. Full hunk-level unified diff patch application engine
-2. OpenTelemetry export hooks
 
 ## License
 MIT License

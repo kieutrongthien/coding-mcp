@@ -17,6 +17,7 @@ import { CommandPolicy } from "../services/commands/command-policy.js";
 import { CommandRunnerService } from "../services/commands/command-runner.service.js";
 import type { ConfigOverrides } from "../config/load-config.js";
 import { AuthzService } from "../services/auth/authz.service.js";
+import { createTelemetryService, type TelemetryService } from "../core/telemetry.js";
 
 export interface AppServices {
   config: ReturnType<typeof loadConfig>;
@@ -29,6 +30,7 @@ export interface AppServices {
   git: GitService;
   commands: CommandRunnerService;
   authz: AuthzService;
+  telemetry: TelemetryService;
   createContext: (operation: string, projectId?: string) => RequestContext;
 }
 
@@ -61,6 +63,15 @@ export function bootstrap(configPath?: string, overrides?: ConfigOverrides): App
     headerName: config.authHeaderName,
     apiKeys: config.authApiKeys
   });
+  const telemetry = createTelemetryService(
+    {
+      enabled: config.enableOtel,
+      serviceName: config.otelServiceName,
+      endpoint: config.otelExporterOtlpEndpoint,
+      headers: config.otelExporterOtlpHeaders
+    },
+    logger
+  );
 
   return {
     config,
@@ -73,6 +84,7 @@ export function bootstrap(configPath?: string, overrides?: ConfigOverrides): App
     git,
     commands,
     authz,
+    telemetry,
     createContext(operation: string, projectId?: string): RequestContext {
       return {
         requestId: crypto.randomUUID(),

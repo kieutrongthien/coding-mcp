@@ -21,6 +21,10 @@ export function loadConfig(configPath?: string, overrides?: ConfigOverrides): Ap
     projectsRoots: projectsRootsFromEnv ?? (legacyProjectRoot ? [legacyProjectRoot] : undefined),
     enableHttp: parseBoolean(process.env.ENABLE_HTTP),
     enableStdio: parseBoolean(process.env.ENABLE_STDIO),
+    enableOtel: parseBoolean(process.env.ENABLE_OTEL),
+    otelServiceName: process.env.OTEL_SERVICE_NAME,
+    otelExporterOtlpEndpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
+    otelExporterOtlpHeaders: parseOtelHeaders(process.env.OTEL_EXPORTER_OTLP_HEADERS),
     enableAuth: parseBoolean(process.env.ENABLE_AUTH),
     authHeaderName: process.env.AUTH_HEADER_NAME,
     authApiKeys: parseAuthApiKeys(process.env.AUTH_API_KEYS),
@@ -162,4 +166,23 @@ function parseAuthApiKeys(value: string | undefined): Array<{ key: string; role:
     });
 
   return bindings;
+}
+
+function parseOtelHeaders(value: string | undefined): Record<string, string> | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const headers: Record<string, string> = {};
+  for (const entry of value.split(",").map((item) => item.trim()).filter(Boolean)) {
+    const [key, ...rest] = entry.split("=");
+    const headerKey = key?.trim();
+    const headerValue = rest.join("=").trim();
+    if (!headerKey || !headerValue) {
+      throw new ValidationError("Invalid OTEL_EXPORTER_OTLP_HEADERS entry", { entry });
+    }
+    headers[headerKey] = headerValue;
+  }
+
+  return headers;
 }

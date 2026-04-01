@@ -18,9 +18,19 @@ export async function startHttpServer(services: AppServices): Promise<void> {
   const httpServer = createServer(async (req, res) => {
     try {
       const auth = services.authz.authenticateHttpRequest(req.headers);
-      await runWithAuthContext(auth, async () => {
-        await transport.handleRequest(req, res);
-      });
+      await services.telemetry.runInSpan(
+        "mcp.http.request",
+        {
+          "http.method": req.method ?? "",
+          "http.path": req.url ?? "",
+          "mcp.auth.role": auth.role,
+          "mcp.auth.key_id": auth.apiKeyId
+        },
+        async () =>
+          await runWithAuthContext(auth, async () => {
+            await transport.handleRequest(req, res);
+          })
+      );
     } catch (error) {
       if (services.authz.enabled && error instanceof SecurityError) {
         const message = error instanceof Error ? error.message : "Unauthorized";

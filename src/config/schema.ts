@@ -9,6 +9,10 @@ export const appConfigSchema = z
     projectsRoots: z.array(z.string().min(1)).min(1),
     enableHttp: z.boolean().default(true),
     enableStdio: z.boolean().default(true),
+    enableOtel: z.boolean().default(false),
+    otelServiceName: z.string().default("coding-mcp"),
+    otelExporterOtlpEndpoint: z.string().default("http://localhost:4318/v1/traces"),
+    otelExporterOtlpHeaders: z.record(z.string()).default({}),
     enableAuth: z.boolean().default(false),
     authHeaderName: z.string().default("x-api-key"),
     authApiKeys: z
