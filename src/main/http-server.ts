@@ -7,6 +7,7 @@ import { createMcpServer } from "../mcp/server.js";
 import { runWithAuthContext } from "../services/auth/auth-context.js";
 import { SecurityError } from "../core/errors.js";
 import { HttpMetrics } from "../core/http-metrics.js";
+import { isSseMessagePath } from "./http-routes.js";
 
 export async function startHttpServer(services: AppServices): Promise<void> {
   if (!services.config.enableHttp) {
@@ -132,7 +133,7 @@ export async function startHttpServer(services: AppServices): Promise<void> {
             }
 
             if (req.method === "GET" && parsedUrl.pathname === "/sse") {
-              const transport = new sseModule.SSEServerTransport("/messages", res);
+              const transport = new sseModule.SSEServerTransport("/sse", res);
               sseTransports.set(transport.sessionId, transport);
 
               res.on("close", () => {
@@ -144,7 +145,7 @@ export async function startHttpServer(services: AppServices): Promise<void> {
               return;
             }
 
-            if (req.method === "POST" && parsedUrl.pathname === "/messages") {
+            if (isSseMessagePath(req.method, parsedUrl.pathname)) {
               const sessionId = parsedUrl.searchParams.get("sessionId");
               if (!sessionId) {
                 res.statusCode = 400;
