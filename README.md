@@ -1,24 +1,38 @@
-# Coding MCP Server
+# Coding MCP
 
-Production-oriented multi-project MCP server for coding agents, designed to manage projects under a shared root directory (for example, `/projects`).
+Production-ready, multi-project MCP server for coding agents.
 
-## Features
+`coding-mcp` is designed for remote and local agent workflows where many repositories are managed under one or more root folders (for example `/projects`, `/srv/repos`). It provides safe filesystem and git automation, consistent MCP contracts, and hardened HTTP deployment controls.
 
-- Multi-project discovery with persistent project registry
-- Safe file CRUD and patch application (structured edits + unified diff input)
-- Git operations with validation and structured command output
-- Safe command execution with allowlisted executables and timeout controls
-- MCP tools, resources, and prompts
-- Binary-safe file resource endpoints (text or base64 blob)
-- Shared business core for STDIO and HTTP transports
-- API-key authentication and RBAC for HTTP deployments
-- OpenTelemetry export hooks for HTTP and tool execution spans
-- Structured JSON response envelope with request IDs and timing
-- Audit logging for mutating operations
+## Highlights
+
+- Multi-project registry with persistent indexing
+- Full tool/resource/prompt MCP surface for coding workflows
+- Safe file operations and patching (structured edits + unified diff hunks)
+- Git command suite with structured output
+- Allowlist-based command runner with timeout and output limits
+- Binary-safe file resources (text and base64 blob modes)
+- Dual transport support: STDIO and HTTP (streamable or SSE)
+- HTTP API-key authentication + RBAC (viewer/editor/admin)
+- OpenTelemetry hooks for request and tool-level tracing
+- Structured operation envelopes with request IDs and timing
+- Audit logging for mutating actions
+
+## Architecture
+
+The server uses one shared core with modular services:
+
+- `config`: environment/config-file loading + runtime validation
+- `core`: response contracts, errors, logging, telemetry hooks, locks
+- `services`: filesystem, git, patching, command execution, auth, project registry
+- `mcp`: tool/resource/prompt registries bound to shared services
+- `main`: CLI and transport bootstrap (`stdio`, `http`, `serve/init/add/remove`)
+
+This keeps STDIO and HTTP behavior consistent while allowing transport-specific controls (for example HTTP auth).
 
 ## Response Contract
 
-Success:
+Successful operation:
 
 ```json
 {
@@ -33,7 +47,7 @@ Success:
 }
 ```
 
-Failure:
+Failed operation:
 
 ```json
 {
@@ -47,7 +61,7 @@ Failure:
 }
 ```
 
-## Setup
+## Quick Start
 
 ```bash
 cp .env.example .env
@@ -55,117 +69,79 @@ npm install
 npm run build
 ```
 
-## Run
-
-CLI command (published/global usage):
+Run HTTP transport:
 
 ```bash
 npx coding-mcp serve --transport http --host 0.0.0.0 --port 4000 --mode streamable
 ```
 
+Run STDIO transport:
+
 ```bash
-coding-mcp serve --transport http --host 0.0.0.0 --port 4000 --mode streamable
+coding-mcp serve --transport stdio
 ```
 
-Initialize registry from current projects root:
+## CLI Commands
+
+Initialize registry roots from current directory:
 
 ```bash
 cd /projects
 coding-mcp init
 ```
 
-Initialize registry from a specific root:
+Initialize from an explicit root:
 
 ```bash
 coding-mcp init /projects
 ```
 
-Add and remove roots in registry:
+Add/remove project roots:
 
 ```bash
 coding-mcp add /srv/repos
 coding-mcp remove /srv/repos
 ```
 
-STDIO:
+Development commands:
 
 ```bash
 npm run dev:stdio
-```
-
-HTTP:
-
-```bash
 npm run dev:http
-```
-
-CLI serve with overrides:
-
-```bash
-npm run dev:serve -- --transport http --host 0.0.0.0 --port 4000 --mode streamable --projects-root /projects --projects-root /srv/repos
-```
-
-CLI serve with SSE mode:
-
-```bash
 npm run dev:serve -- --transport http --host 127.0.0.1 --port 3001 --mode sse
 ```
 
 ## Configuration
 
-Use environment variables or a JSON/YAML config file passed with `MCP_CONFIG_PATH`.
+Use environment variables directly or provide a JSON/YAML file via `MCP_CONFIG_PATH`.
 
-Key vars:
+Core settings:
 
-- `PROJECTS_ROOT`
-- `PROJECTS_ROOTS` (comma-separated list; preferred)
-- `ENABLE_HTTP`
-- `ENABLE_STDIO`
+- `PROJECTS_ROOTS` (preferred, comma-separated)
+- `PROJECTS_ROOT` (legacy compatibility)
+- `ENABLE_HTTP`, `ENABLE_STDIO`
+- `HTTP_HOST`, `HTTP_PORT`, `HTTP_MODE`
+- `MAX_FILE_SIZE`, `MAX_OUTPUT_SIZE`, `COMMAND_TIMEOUT_MS`
+- `ALLOWED_COMMANDS`, `PROTECTED_PATHS`
+- `LOG_LEVEL`
+- `REGISTRY_FILE`, `AUDIT_LOG_FILE`
+
+Security settings:
+
+- `ENABLE_AUTH`
+- `AUTH_HEADER_NAME`
+- `AUTH_API_KEYS` in `key:role:id` format
+
+Observability settings:
+
 - `ENABLE_OTEL`
 - `OTEL_SERVICE_NAME`
 - `OTEL_EXPORTER_OTLP_ENDPOINT`
-- `OTEL_EXPORTER_OTLP_HEADERS` (`key=value,key2=value2`)
-- `ENABLE_AUTH`
-- `AUTH_HEADER_NAME`
-- `AUTH_API_KEYS` (`key:role:id,key2:role:id2`)
-- `HTTP_HOST`
-- `HTTP_PORT`
-- `MAX_FILE_SIZE`
-- `MAX_OUTPUT_SIZE`
-- `COMMAND_TIMEOUT_MS`
-- `ALLOWED_COMMANDS`
-- `PROTECTED_PATHS`
-- `LOG_LEVEL`
+- `OTEL_EXPORTER_OTLP_HEADERS` in `key=value,key2=value2`
 
-## MCP Resources
+## HTTP Security (Auth/RBAC)
 
-- `project://index`
-- `project://{project_id}/tree`
-- `project://{project_id}/package-json`
-- `project://{project_id}/readme`
-- `project://{project_id}/git-status`
-- `project://file/{project_id}/{path}`
-- `project://file-meta/{project_id}/{path}`
-
-`project://file/{project_id}/{path}` behavior:
-
-- Text files are returned as `text`.
-- Binary files are returned as base64 `blob` with MIME type.
-- Output is bounded by configured max output size.
-
-## Multi-root Discovery
-
-The server can discover projects from multiple parent directories.
-
-1. Set `PROJECTS_ROOTS=/projects,/srv/repos` in environment or config.
-2. Optionally pass repeated `--projects-root` flags in CLI serve mode.
-3. Projects from all configured roots are indexed into one registry.
-
-## HTTP Auth/RBAC
-
-When exposing HTTP transport, enable API-key auth with role-based access control.
-
-Example:
+Enable API-key authentication when exposing HTTP transport.
 
 ```bash
 ENABLE_AUTH=true
@@ -179,17 +155,15 @@ Request header:
 x-api-key: editor-key
 ```
 
-Role model:
+Roles:
 
 - `viewer`: read-only operations
-- `editor`: read + non-destructive write/build/test workflows
-- `admin`: full access including destructive operations
+- `editor`: read + non-destructive write/build/test flows
+- `admin`: full access (including destructive operations)
 
-## OpenTelemetry Hooks
+## OpenTelemetry
 
-Enable tracing export for HTTP requests and MCP tool operations.
-
-Example:
+Tracing can be exported over OTLP HTTP.
 
 ```bash
 ENABLE_OTEL=true
@@ -198,14 +172,30 @@ OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318/v1/traces
 OTEL_EXPORTER_OTLP_HEADERS=authorization=Bearer%20token
 ```
 
-Spans emitted:
+Emitted spans:
 
 - `mcp.http.request`
 - `mcp.tool.{operation}`
 
-## Example MCP Client Config
+## MCP Resources
 
-### Cursor (STDIO)
+- `project://index`
+- `project://{project_id}/tree`
+- `project://{project_id}/package-json`
+- `project://{project_id}/readme`
+- `project://{project_id}/git-status`
+- `project://file/{project_id}/{path}`
+- `project://file-meta/{project_id}/{path}`
+
+File resource behavior:
+
+- Text files are returned via `text`
+- Binary files are returned via base64 `blob`
+- Response payloads are bounded by configured output limits
+
+## MCP Client Examples
+
+Cursor (STDIO):
 
 ```json
 {
@@ -214,7 +204,7 @@ Spans emitted:
       "command": "node",
       "args": ["/absolute/path/to/coding-mcp/dist/main/stdio.js"],
       "env": {
-        "PROJECTS_ROOT": "/projects",
+        "PROJECTS_ROOTS": "/projects,/srv/repos",
         "ENABLE_STDIO": "true",
         "ENABLE_HTTP": "false"
       }
@@ -223,7 +213,7 @@ Spans emitted:
 }
 ```
 
-### Claude Desktop (STDIO)
+Claude Desktop (STDIO):
 
 ```json
 {
@@ -232,35 +222,35 @@ Spans emitted:
       "command": "node",
       "args": ["/absolute/path/to/coding-mcp/dist/main/stdio.js"],
       "env": {
-        "PROJECTS_ROOT": "/projects"
+        "PROJECTS_ROOTS": "/projects"
       }
     }
   }
 }
 ```
 
-### Generic HTTP MCP Client
+Generic HTTP MCP client:
 
 ```json
 {
   "mcpServers": {
     "coding-mcp-http": {
       "url": "http://your-host:3000",
-      "headers": {}
+      "headers": {
+        "x-api-key": "editor-key"
+      }
     }
   }
 }
 ```
 
-## Tool Coverage
-
-Implemented tools include project discovery, file/directory operations, search/analysis, git workflows, and command execution (`run_build`, `run_test`, `run_lint`, `run_command_safe`).
-
-## Tests
+## Validation
 
 ```bash
+npm run typecheck
 npm test
 ```
 
 ## License
-MIT License
+
+MIT
