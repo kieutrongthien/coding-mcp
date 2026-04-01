@@ -1,0 +1,71 @@
+---
+title: "Phát triển"
+description: "Quy trình phát triển local, test và release cho coding-mcp."
+---
+
+## Vòng lặp phát triển local
+
+Dùng quy trình này khi làm feature:
+
+<Steps>
+  <Step title="Cài dependencies">
+
+```bash
+npm install
+```
+
+  </Step>
+  <Step title="Chạy quality gates">
+
+```bash
+npm run typecheck
+npm test
+```
+
+  </Step>
+  <Step title="Chạy server local">
+
+```bash
+npm run dev:serve -- --transport http --host 127.0.0.1 --port 3001 --mode streamable
+```
+
+  </Step>
+</Steps>
+
+## Build targets
+
+- `npm run build` bien dich TypeScript vao `dist/`
+- `npm run start:serve` chay production CLI entry
+- `npm run start:http` va `npm run start:stdio` chay entrypoint theo transport
+
+## Quy trình tài liệu
+
+Tài liệu được quản lý trong thư mục `docs/` bằng Mintlify.
+
+```bash
+cd docs
+mint validate
+```
+
+Kiểm tra bổ sung:
+
+```bash
+mint broken-links
+```
+
+## Chiến lược test
+
+Test suite gồm:
+
+- Unit tests cho safety và service logic
+- Integration tests cho transport boot và registry workflows
+- Patch và filesystem behavior tests, gồm cả binary-safe reads
+
+Khi bạn thêm behavior mới, cập nhật tests ở khu vực module tương ứng trong `test/`.
+
+## Checklist contribution
+
+- Đồng bộ zod schemas và handlers
+- Giữ cấu trúc response envelope
+- Bảo vệ thao tác destructive bằng confirm
+- Cập nhật docs và `.env.example` cho thay đổi hướng người dùng

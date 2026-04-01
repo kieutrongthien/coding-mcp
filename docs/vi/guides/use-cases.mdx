@@ -1,0 +1,95 @@
+---
+title: "Use cases"
+description: "Các tình huống thực tế để chạy coding-mcp theo quy trình đầu-cuối."
+---
+
+Dùng trang này để ánh xạ các tác vụ kỹ thuật thực tế sang thao tác cụ thể của coding-mcp.
+
+## Onboard một repository root mới
+
+Khi team bắt đầu làm việc trong một cây thư mục mới, hãy index một lần và kiểm tra kết quả.
+
+<Steps>
+  <Step title="Khởi tạo từ root mới">
+
+```bash
+coding-mcp init /projects
+```
+
+  </Step>
+  <Step title="Xác nhận project đã được phát hiện">
+
+Dùng `list_projects` và `get_project` để kiểm tra ID và metadata.
+
+  </Step>
+  <Step title="Chia sẻ project ID ổn định cho agents">
+
+Dùng các `project_id` trả về trong các tool call như `get_project_tree`, `read_file`, và `search_files`.
+
+  </Step>
+</Steps>
+
+## Triển khai tính năng an toàn trên nhiều file
+
+Dùng luồng này khi agent cần sửa nhiều file nhưng vẫn giữ guardrails.
+
+1. Khám phá code bằng `search_files` và `grep_content`.
+2. Đọc file mục tiêu với `read_file`.
+3. Xem trước patch bằng `apply_patch` với `dry_run=true`.
+4. Apply patch thật.
+5. Chạy `run_lint` và `run_test`.
+6. Stage và commit bằng `git_add` và `git_commit`.
+
+<Info>
+  Luồng này giữ thay đổi trong boundary của project và cho bạn thấy xung đột trước khi ghi file.
+</Info>
+
+## Hotfix production với rủi ro thấp
+
+Khi cần sửa gấp, hãy giới hạn phạm vi và bật đủ bước kiểm tra.
+
+1. Xác định file bị ảnh hưởng từ đường dẫn trong stack trace.
+2. Patch đúng các file đó.
+3. Chạy xác minh mục tiêu bằng `run_command_safe`.
+4. Chụp diff bằng `git_diff`.
+5. Tạo commit message theo phạm vi thay đổi và push.
+
+Ví dụ lệnh xác minh:
+
+```json
+{
+  "project_id": "abc123",
+  "command": "npm",
+  "args": ["test", "--", "path/to/failing.spec.ts"],
+  "timeout_ms": 120000
+}
+```
+
+## Dọn trạng thái repository trước release
+
+Trước khi cắt release, dùng coding-mcp để chuẩn hóa trạng thái repo.
+
+- Kiểm tra working tree bằng `git_status`.
+- Xem thay đổi chờ commit bằng `git_diff`.
+- Kiểm tra lịch sử gần đây bằng `git_log`.
+- Tạo release tag bằng `git_create_tag`.
+
+## Chẩn đoán CI theo hướng bảo mật
+
+Khi CI lỗi trong môi trường hạn chế:
+
+- Xác nhận danh sách lệnh cho phép trong `ALLOWED_COMMANDS`.
+- Dùng `run_build`, `run_test`, và `run_lint` để mô phỏng pipeline.
+- Kiểm tra timeout và truncation qua structured outputs.
+- Điều chỉnh `COMMAND_TIMEOUT_MS` và retry settings nếu lỗi mang tính tạm thời.
+
+## Trang nên đọc kèm
+
+<CardGroup cols={2}>
+  <Card title="Cấu hình" href="/vi/guides/configuration" icon="settings">
+    Tinh chỉnh giới hạn runtime, retries và command allowlists.
+  </Card>
+  <Card title="Bảo mật và RBAC" href="/vi/guides/security-rbac" icon="shield-check">
+    Khóa truy cập HTTP và phân quyền thao tác.
+  </Card>
+</CardGroup>

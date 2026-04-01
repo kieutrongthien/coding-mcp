@@ -1,0 +1,95 @@
+---
+title: "Use cases"
+description: "Practical coding-mcp workflows you can run end-to-end."
+---
+
+Use this page to map real engineering tasks to concrete coding-mcp operations.
+
+## Onboard a new repository root
+
+When your team starts working in a new folder tree, index it once and verify discovery.
+
+<Steps>
+  <Step title="Initialize from the new root">
+
+```bash
+coding-mcp init /projects
+```
+
+  </Step>
+  <Step title="Verify discovered projects">
+
+Use `list_projects` and `get_project` to confirm IDs and metadata.
+
+  </Step>
+  <Step title="Share stable project IDs with your agents">
+
+Use the returned `project_id` values in tool calls such as `get_project_tree`, `read_file`, and `search_files`.
+
+  </Step>
+</Steps>
+
+## Implement a feature safely across files
+
+Use this flow when an agent needs to change multiple files with guardrails.
+
+1. Explore code with `search_files` and `grep_content`.
+2. Read target files with `read_file`.
+3. Preview patch with `apply_patch` and `dry_run=true`.
+4. Apply the patch for real.
+5. Run `run_lint` and `run_test`.
+6. Stage and commit with `git_add` and `git_commit`.
+
+<Info>
+  This path keeps edits inside project boundaries and gives you conflict visibility before writing.
+</Info>
+
+## Hotfix production issue with minimal risk
+
+When you need a fast fix, focus on a narrow path and enforce checks.
+
+1. Identify affected files from stack trace paths.
+2. Patch only those files.
+3. Run targeted verification with `run_command_safe`.
+4. Capture diff using `git_diff`.
+5. Create a scoped commit message and push.
+
+Example verification command:
+
+```json
+{
+  "project_id": "abc123",
+  "command": "npm",
+  "args": ["test", "--", "path/to/failing.spec.ts"],
+  "timeout_ms": 120000
+}
+```
+
+## Repository hygiene and release prep
+
+Before a release cut, use coding-mcp to normalize repository state.
+
+- Check working tree with `git_status`.
+- Review pending changes with `git_diff`.
+- Inspect recent history with `git_log`.
+- Create release tag with `git_create_tag`.
+
+## Security-focused CI diagnostics
+
+When CI fails in a restricted environment:
+
+- Confirm allowed commands in `ALLOWED_COMMANDS`.
+- Use `run_build`, `run_test`, and `run_lint` to mirror pipeline steps.
+- Inspect timeout and truncation behavior through structured outputs.
+- Adjust `COMMAND_TIMEOUT_MS` and retry settings if failures are transient.
+
+## Suggested pairings
+
+<CardGroup cols={2}>
+  <Card title="Configuration" href="/guides/configuration" icon="settings">
+    Tune runtime limits, retries, and command allowlists.
+  </Card>
+  <Card title="Security and RBAC" href="/guides/security-rbac" icon="shield-check">
+    Lock down HTTP access and operation permissions.
+  </Card>
+</CardGroup>

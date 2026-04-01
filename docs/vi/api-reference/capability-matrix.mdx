@@ -1,0 +1,76 @@
+---
+title: "Ma trận năng lực"
+description: "Tham chiếu input contract và mô hình an toàn theo từng tool của coding-mcp."
+---
+
+Dùng trang này như tài liệu tra cứu nhanh cho tool contracts và yêu cầu phân quyền.
+
+## Quản lý dự án
+
+| Tool | Key inputs | Mutating | Notes |
+| --- | --- | --- | --- |
+| `list_projects` | none | No | Liệt kê các dự án đã index |
+| `get_project` | `project_id` | No | Trả về tóm tắt metadata |
+| `refresh_project_index` | `project_id?` | Yes | Build lại index cho một/tất cả dự án |
+| `summarize_project` | `project_id` | No | Tóm tắt cấp cao cho dự án |
+
+## File và patch tools
+
+| Tool | Key inputs | Mutating | Safety controls |
+| --- | --- | --- | --- |
+| `list_directory` | `project_id`, `path` | No | Root boundary checks |
+| `read_file` | `project_id`, `path`, `start_line?`, `end_line?` | No | Max file size limit |
+| `read_multiple_files` | `project_id`, `paths[]` | No | Per-file size validation |
+| `create_file` | `project_id`, `path`, `content`, `overwrite?` | Yes | Protected path checks |
+| `write_file` | `project_id`, `path`, `content` | Yes | Protected path checks |
+| `replace_in_file` | `project_id`, `path`, `find`, `replace`, `replace_all?` | Yes | Protected path checks |
+| `apply_patch` | `project_id`, `path`, `patch?`, `structured_edits?`, `dry_run?` | Yes | Hunk conflict reporting, dry run |
+| `delete_file` | `project_id`, `path`, `recursive?`, `confirm` | Yes | Yêu cầu `confirm=true` |
+| `move_file` | `project_id`, `source_path`, `target_path` | Yes | Source/target boundary checks |
+
+## Search và analysis
+
+| Tool | Key inputs | Mutating | Notes |
+| --- | --- | --- | --- |
+| `search_files` | `project_id`, `query` | No | Tìm theo tên/đường dẫn |
+| `grep_content` | `project_id`, `pattern`, `include_glob?`, `exclude_glob?` | No | Trả về đoạn khớp theo dòng |
+| `get_project_tree` | `project_id`, `max_depth?` | No | Trả về cây dự án đã chuẩn hóa |
+
+## Git tools
+
+| Tool | Key inputs | Mutating | Safety controls |
+| --- | --- | --- | --- |
+| `git_status` | `project_id` | No | Validate repository tồn tại |
+| `git_diff` | `project_id`, `staged?` | No | Structured stdout/stderr |
+| `git_branch_list` | `project_id` | No | Structured stdout/stderr |
+| `git_checkout_new_branch` | `project_id`, `branch` | Yes | Per-project lock |
+| `git_checkout_branch` | `project_id`, `branch` | Yes | Per-project lock |
+| `git_pull` | `project_id` | Yes | Per-project lock |
+| `git_add` | `project_id`, `paths[]` | Yes | Per-project lock |
+| `git_restore` | `project_id`, `paths[]`, `staged?`, `confirm` | Yes | Yêu cầu `confirm=true` |
+| `git_commit` | `project_id`, `message` | Yes | Validate commit message |
+| `git_push` | `project_id`, `remote?`, `branch?`, `set_upstream?` | Yes | Structured stdout/stderr |
+| `git_log` | `project_id`, `limit?` | No | Structured stdout/stderr |
+| `git_show` | `project_id`, `ref?` | No | Structured stdout/stderr |
+| `git_create_tag` | `project_id`, `tag`, `message?` | Yes | Per-project lock |
+
+## Command tools
+
+| Tool | Key inputs | Mutating | Safety controls |
+| --- | --- | --- | --- |
+| `run_build` | `project_id` | Yes | Allowlisted command runner |
+| `run_test` | `project_id` | Yes | Allowlisted command runner |
+| `run_lint` | `project_id` | Yes | Allowlisted command runner |
+| `run_command_safe` | `project_id`, `command`, `args[]`, `cwd?`, `timeout_ms?` | Yes | Command/args policy, timeout, output truncation |
+
+## Mô hình vai trò (HTTP mode)
+
+| Role | Access |
+| --- | --- |
+| `viewer` | Thao tác thiên về đọc |
+| `editor` | Viewer + workflows ghi/build/test không phá hủy |
+| `admin` | Toàn bộ thao tác |
+
+<Note>
+  Trong HTTP deployment có bật auth, role checks chạy trước mỗi tool operation. Ở STDIO mode, mô hình tin cậy local process được áp dụng nếu không có wrapper bổ sung.
+</Note>

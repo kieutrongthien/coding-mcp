@@ -1,0 +1,46 @@
+---
+title: "Bảo mật và RBAC"
+description: "Bảo mật HTTP deployment bằng API keys và role-based access control."
+---
+
+Với HTTP deployment, hãy bật API-key auth và phân quyền theo vai trò.
+
+<Warning>
+  Không public HTTP transport nếu chưa bật `ENABLE_AUTH=true`.
+</Warning>
+
+## Bật auth
+
+```bash
+ENABLE_AUTH=true
+AUTH_HEADER_NAME=x-api-key
+AUTH_API_KEYS=viewer-key:viewer:viewer1,editor-key:editor:editor1,admin-key:admin:admin1
+```
+
+Client phải gửi auth header đã cấu hình:
+
+```http
+x-api-key: editor-key
+```
+
+## Vai trò
+
+- `viewer`: thao tác thiên về đọc
+- `editor`: đọc + phần lớn thao tác ghi/build/test
+- `admin`: toàn quyền, gồm cả thao tác phá hủy
+
+## Kiểm soát bảo mật trong codebase
+
+- Chống path traversal
+- Resolve path trong boundary của project
+- Chặn mutation trên protected paths
+- Confirm flags cho thao tác phá hủy
+- Command allowlist và kiểm tra an toàn args
+- Giới hạn kích thước output và file
+
+## Khuyến nghị vận hành
+
+- Luân phiên API keys định kỳ
+- Dùng key riêng cho từng môi trường
+- Giới hạn admin keys cho automation đáng tin cậy
+- Bật telemetry để audit request

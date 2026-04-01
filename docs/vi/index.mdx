@@ -1,0 +1,40 @@
+---
+title: "Giới thiệu"
+description: "Tổng quan coding-mcp và cách sử dụng trong workflow production."
+---
+
+`coding-mcp` là MCP server đa dự án cho coding agent. Hệ thống cung cấp tự động hóa file và git an toàn, response có cấu trúc thống nhất, transport HTTP/STDIO, API-key RBAC và OpenTelemetry hooks.
+
+Tài liệu này giúp bạn cài đặt server, hiểu kiến trúc và mở rộng tool an toàn.
+
+<CardGroup cols={2}>
+  <Card title="Bắt đầu nhanh" icon="rocket" href="/vi/quickstart">
+    Cài đặt, cấu hình và chạy coding-mcp trên máy cục bộ.
+  </Card>
+  <Card title="Phát triển" icon="code" href="/vi/development">
+    Build, test và xác thực thay đổi trong repository.
+  </Card>
+  <Card title="Phân tích mã nguồn" icon="binary" href="/architecture/source-code-analysis">
+    Tìm hiểu boundary service và luồng xử lý request.
+  </Card>
+  <Card title="Giao diện MCP" icon="terminal" href="/api-reference/introduction">
+    Xem tools, resources và prompts.
+  </Card>
+</CardGroup>
+
+## Khả năng cốt lõi
+
+- Khám phá nhiều root dự án và lưu registry bền vững
+- File CRUD an toàn và patching hỗ trợ unified diff hunk
+- Thao tác Git với output có cấu trúc
+- Thực thi command theo allowlist
+- File resources an toàn cho text và binary
+- HTTP auth với role-based access control
+- OpenTelemetry hooks cho request và tool operations
+
+## Lộ trình đọc đề xuất
+
+1. Bắt đầu với [Bắt đầu nhanh](/vi/quickstart)
+2. Cấu hình roots và runtime trong [Configuration](/guides/configuration)
+3. Bảo mật HTTP deployment trong [Security and RBAC](/guides/security-rbac)
+4. Khám phá điểm mở rộng trong [Source code analysis](/architecture/source-code-analysis)

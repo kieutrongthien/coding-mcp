@@ -9,45 +9,99 @@
   },
   "favicon": "/favicon.svg",
   "navigation": {
-    "tabs": [
+    "languages": [
       {
-        "tab": "Documentation",
-        "groups": [
+        "language": "en",
+        "tabs": [
           {
-            "group": "Getting started",
-            "pages": [
-              "index",
-              "quickstart",
-              "development"
+            "tab": "Documentation",
+            "groups": [
+              {
+                "group": "Getting started",
+                "pages": [
+                  "index",
+                  "quickstart",
+                  "development"
+                ]
+              },
+              {
+                "group": "Architecture",
+                "pages": [
+                  "architecture/source-code-analysis",
+                  "guides/observability"
+                ]
+              },
+              {
+                "group": "Operations",
+                "pages": [
+                  "guides/configuration",
+                  "guides/use-cases",
+                  "guides/cli-and-registry",
+                  "guides/security-rbac"
+                ]
+              }
             ]
           },
           {
-            "group": "Architecture",
-            "pages": [
-              "architecture/source-code-analysis",
-              "guides/observability"
-            ]
-          },
-          {
-            "group": "Operations",
-            "pages": [
-              "guides/configuration",
-              "guides/cli-and-registry",
-              "guides/security-rbac"
+            "tab": "API reference",
+            "groups": [
+              {
+                "group": "MCP interface",
+                "pages": [
+                  "api-reference/introduction",
+                  "api-reference/tools",
+                  "api-reference/resources-prompts",
+                  "api-reference/capability-matrix"
+                ]
+              }
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
-        "groups": [
+        "language": "vi",
+        "tabs": [
           {
-            "group": "MCP interface",
-            "pages": [
-              "api-reference/introduction",
-              "api-reference/tools",
-              "api-reference/resources-prompts",
-              "api-reference/capability-matrix"
+            "tab": "Tài liệu",
+            "groups": [
+              {
+                "group": "Bắt đầu",
+                "pages": [
+                  "vi/index",
+                  "vi/quickstart",
+                  "vi/development"
+                ]
+              },
+              {
+                "group": "Kiến trúc",
+                "pages": [
+                  "vi/architecture/source-code-analysis",
+                  "vi/guides/observability"
+                ]
+              },
+              {
+                "group": "Vận hành",
+                "pages": [
+                  "vi/guides/configuration",
+                  "vi/guides/use-cases",
+                  "vi/guides/cli-and-registry",
+                  "vi/guides/security-rbac"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Tham chiếu API",
+            "groups": [
+              {
+                "group": "Giao diện MCP",
+                "pages": [
+                  "vi/api-reference/introduction",
+                  "vi/api-reference/tools",
+                  "vi/api-reference/resources-prompts",
+                  "vi/api-reference/capability-matrix"
+                ]
+              }
             ]
           }
         ]

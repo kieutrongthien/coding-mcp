@@ -1,0 +1,62 @@
+---
+title: "CLI và registry"
+description: "Quản lý project roots và chạy coding-mcp từ CLI."
+---
+
+CLI hỗ trợ khởi động transport và quản lý registry roots theo cách lưu bền.
+
+Nếu bạn không cài global, thêm tiền tố sau cho lệnh:
+
+```bash
+npx @kieutrongthien/coding-mcp
+```
+
+## Lệnh
+
+```bash
+coding-mcp serve [options]
+coding-mcp init [folder]
+coding-mcp add <folder>
+coding-mcp remove <folder>
+```
+
+## Quản lý root
+
+`init` đặt lại roots về một folder và quét toàn bộ.
+
+```bash
+coding-mcp init /projects
+```
+
+`add` thêm một root và quét lại.
+
+```bash
+coding-mcp add /srv/repos
+```
+
+`remove` xóa một root và quét lại các root còn lại.
+
+```bash
+coding-mcp remove /srv/repos
+```
+
+Mọi thao tác đều được lưu vào file registry JSON.
+
+## Tùy chọn serve
+
+```bash
+coding-mcp serve --transport http --host 0.0.0.0 --port 3000 --mode streamable
+```
+
+Tùy chọn thường dùng:
+
+- `--transport <http|stdio>`
+- `--host <host>`
+- `--port <port>`
+- `--mode <streamable|sse>`
+- `--projects-root <path>` (lặp lại nhiều lần)
+- `--config <path>`
+
+## Structured output
+
+`init`, `add`, và `remove` trả về JSON payload có cấu trúc để agent có thể parse theo chương trình.

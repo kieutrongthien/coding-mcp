@@ -1,0 +1,56 @@
+---
+title: "Cấu hình"
+description: "Cấu hình coding-mcp bằng biến môi trường hoặc file cấu hình."
+---
+
+Bạn có thể dùng `.env`, biến môi trường, hoặc `MCP_CONFIG_PATH` với file JSON/YAML.
+
+## Thiết lập cốt lõi
+
+- `PROJECTS_ROOTS`: danh sách project roots, phân tách bằng dấu phẩy (khuyến nghị)
+- `PROJECTS_ROOT`: fallback legacy cho một root
+- `ENABLE_HTTP`, `ENABLE_STDIO`
+- `HTTP_HOST`, `HTTP_PORT`, `HTTP_MODE`
+- `MAX_FILE_SIZE`, `MAX_OUTPUT_SIZE`
+- `COMMAND_TIMEOUT_MS`
+- `RETRY_MAX_ATTEMPTS`, `RETRY_BASE_DELAY_MS`
+- `ALLOWED_COMMANDS`
+- `PROTECTED_PATHS`
+- `LOG_LEVEL`
+- `REGISTRY_FILE`, `AUDIT_LOG_FILE`, `HTTP_REQUEST_LOG_FILE`
+
+## Đường dẫn đa nền tảng
+
+`REGISTRY_FILE` và `AUDIT_LOG_FILE` hỗ trợ `~` và được chuẩn hóa thành đường dẫn tuyệt đối trên Linux, macOS và Windows.
+
+## Ví dụ `.env`
+
+```bash
+PROJECTS_ROOTS=/projects,/srv/repos
+ENABLE_HTTP=true
+ENABLE_STDIO=true
+HTTP_HOST=127.0.0.1
+HTTP_PORT=3000
+HTTP_MODE=streamable
+MAX_FILE_SIZE=1048576
+MAX_OUTPUT_SIZE=131072
+COMMAND_TIMEOUT_MS=120000
+RETRY_MAX_ATTEMPTS=2
+RETRY_BASE_DELAY_MS=200
+ALLOWED_COMMANDS=npm,pnpm,yarn,go,python,pytest,ruff,flake8,cargo,mvn,gradle,php,composer,phpunit,make
+PROTECTED_PATHS=.git,.env,.env.local,.env.production
+LOG_LEVEL=info
+REGISTRY_FILE=~/.coding-mcp/registry.json
+AUDIT_LOG_FILE=~/.coding-mcp/audit.log
+HTTP_REQUEST_LOG_FILE=~/.coding-mcp/http-requests.log
+```
+
+## Dùng file cấu hình
+
+```bash
+MCP_CONFIG_PATH=/etc/coding-mcp/config.yaml coding-mcp serve --transport http
+```
+
+## Validation
+
+Nếu cấu hình không hợp lệ, quá trình khởi động sẽ dừng với schema validation errors.

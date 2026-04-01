@@ -1,0 +1,58 @@
+---
+title: "Quan sát hệ thống"
+description: "Logging, audit events và OpenTelemetry tracing trong coding-mcp."
+---
+
+`coding-mcp` cung cấp 3 lớp quan sát:
+
+- Structured logs (Pino)
+- Audit logs cho thao tác có mutation
+- OpenTelemetry trace hooks
+
+## Logging
+
+Đặt `LOG_LEVEL` để điều khiển mức chi tiết.
+
+```bash
+LOG_LEVEL=info
+```
+
+## Audit log
+
+Các thao tác có mutation được ghi thêm vào file audit log.
+
+```bash
+AUDIT_LOG_FILE=~/.coding-mcp/audit.log
+```
+
+## OpenTelemetry
+
+Bật OTLP export:
+
+```bash
+ENABLE_OTEL=true
+OTEL_SERVICE_NAME=coding-mcp
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318/v1/traces
+OTEL_EXPORTER_OTLP_HEADERS=authorization=Bearer%20token
+```
+
+Spans được phát:
+
+- `mcp.http.request`
+- `mcp.tool.{operation}`
+
+## HTTP monitoring endpoints
+
+Khi bật HTTP transport, dùng các endpoint sau để theo dõi dịch vụ:
+
+- `GET /healthz` cho liveness checks
+- `GET /readyz` cho readiness checks kèm số lượng project đã index
+- `GET /metrics` cho request metrics cơ bản (`request_count`, `error_count`, latency summary)
+
+## Xử lý sự cố
+
+Nếu traces không xuất hiện:
+
+1. Kiểm tra khả năng truy cập exporter endpoint
+2. Kiểm tra định dạng OTLP headers (`key=value,key2=value2`)
+3. Kiểm tra server logs để tìm lỗi khởi tạo

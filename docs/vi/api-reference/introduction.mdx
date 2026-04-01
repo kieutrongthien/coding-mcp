@@ -1,0 +1,47 @@
+---
+title: "Tổng quan giao diện MCP"
+description: "Hiểu tools, resources, prompts và response contracts."
+---
+
+Server cung cấp năng lực MCP theo 3 nhóm:
+
+- Tools: thao tác dự án, chỉnh sửa file, tìm kiếm, git và thực thi command
+- Resources: project tree, files, metadata và status
+- Prompts: các prompt tái sử dụng cho coding workflow
+
+## Response envelope
+
+Thao tác thành công:
+
+```json
+{
+  "ok": true,
+  "operation": "read_file",
+  "project_id": "abc123",
+  "data": {},
+  "warnings": [],
+  "errors": [],
+  "request_id": "uuid",
+  "duration_ms": 12
+}
+```
+
+Thao tác thất bại:
+
+```json
+{
+  "ok": false,
+  "operation": "write_file",
+  "error_code": "SECURITY_ERROR",
+  "message": "Operation blocked for protected path",
+  "details": {}
+}
+```
+
+## Vị trí triển khai handlers
+
+- `src/mcp/tools/*`
+- `src/mcp/resources/*`
+- `src/mcp/prompts/*`
+
+Dùng các trang tham chiếu trong tab này để xem phạm vi năng lực đã hỗ trợ.

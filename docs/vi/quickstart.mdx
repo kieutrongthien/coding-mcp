@@ -1,0 +1,92 @@
+---
+title: "Bắt đầu nhanh"
+description: "Cài đặt và chạy coding-mcp với root dự án đầu tiên."
+---
+
+<Info>
+  **Điều kiện tiên quyết**:
+  - Node.js 20 trở lên
+  - Ít nhất một thư mục chứa repository (ví dụ `/projects`)
+</Info>
+
+## Cài đặt
+
+Cài đặt global từ npm:
+
+```bash
+npm install -g @kieutrongthien/coding-mcp
+```
+
+Hoặc chạy trực tiếp bằng npx:
+
+```bash
+npx @kieutrongthien/coding-mcp serve --transport http --host 0.0.0.0 --port 4000 --mode streamable
+```
+
+Nếu bạn muốn phát triển từ source:
+
+```bash
+git clone https://github.com/kieutrongthien/coding-mcp.git
+cd coding-mcp
+npm install
+npm run build
+```
+
+## Cấu hình môi trường
+
+Tạo file env local từ file mẫu:
+
+```bash
+cp .env.example .env
+```
+
+Đặt project roots trong `.env`:
+
+```bash
+PROJECTS_ROOTS=/projects,/srv/repos
+```
+
+## Khởi tạo project registry
+
+Dùng CLI để quét và lưu projects từ một root:
+
+```bash
+coding-mcp init /projects
+```
+
+Thêm hoặc xóa root sau đó:
+
+```bash
+coding-mcp add /srv/repos
+coding-mcp remove /srv/repos
+```
+
+## Khởi động server
+
+HTTP mode:
+
+```bash
+coding-mcp serve --transport http --host 0.0.0.0 --port 4000 --mode streamable
+```
+
+STDIO mode:
+
+```bash
+coding-mcp serve --transport stdio
+```
+
+## Kiểm tra
+
+Chạy quality checks sau khi setup:
+
+```bash
+npm run typecheck
+npm test
+```
+
+## Bước tiếp theo
+
+- Cấu hình nâng cao trong [Configuration](/guides/configuration)
+- Xem các tình huống thực tế trong [Use cases](/vi/guides/use-cases)
+- Bật auth trong [Security and RBAC](/guides/security-rbac)
+- Bật traces trong [Observability](/guides/observability)

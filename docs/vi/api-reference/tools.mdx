@@ -1,0 +1,59 @@
+---
+title: "Tools"
+description: "Phạm vi tool cho workflow dự án, file, tìm kiếm, git và command."
+---
+
+## Project tools
+
+- `list_projects`
+- `get_project`
+- `refresh_project_index`
+- `summarize_project`
+
+## File và directory tools
+
+- `list_directory`
+- `read_file`
+- `read_multiple_files`
+- `create_file`
+- `write_file`
+- `replace_in_file`
+- `apply_patch`
+- `delete_file`
+- `move_file`
+
+## Search và analysis tools
+
+- `search_files`
+- `grep_content`
+- `get_project_tree`
+- `summarize_project`
+
+## Git tools
+
+- `git_status`
+- `git_diff`
+- `git_branch_list`
+- `git_checkout_new_branch`
+- `git_checkout_branch`
+- `git_pull`
+- `git_add`
+- `git_restore`
+- `git_commit`
+- `git_push`
+- `git_log`
+- `git_show`
+- `git_create_tag`
+
+## Command tools
+
+- `run_build`
+- `run_test`
+- `run_lint`
+- `run_command_safe`
+
+## Ghi chú
+
+- Thao tác phá hủy yêu cầu confirm flags tường minh.
+- Mọi thao tác tool đều được validate bằng zod schemas.
+- Ở HTTP mode, phân quyền theo vai trò được áp dụng khi auth được bật.

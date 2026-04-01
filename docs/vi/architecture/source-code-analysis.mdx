@@ -1,0 +1,163 @@
+---
+title: "Phân tích mã nguồn"
+description: "Hiểu kiến trúc coding-mcp, luồng thực thi và điểm mở rộng."
+---
+
+<Info>
+  Trang này giải thích cách codebase hiện tại được tổ chức và nơi bạn nên thêm hành vi mới một cách an toàn.
+</Info>
+
+## Tổng quan hệ thống
+
+`coding-mcp` được tổ chức theo kiến trúc service nhiều lớp bằng TypeScript, với một application core dùng chung và hai transport.
+
+- `src/config`: kiểm tra và chuẩn hóa cấu hình runtime
+- `src/core`: hợp đồng dùng chung (errors, responses, logging, telemetry, locks)
+- `src/services`: domain services (registry, filesystem, patch, git, commands, auth)
+- `src/mcp`: khởi tạo MCP server với registry của tool/resource/prompt
+- `src/main`: bootstrap và transport entrypoints (`stdio`, `http`, `cli`)
+
+## Bootstrap và wiring dependencies
+
+Ứng dụng khởi động trong `src/main/bootstrap.ts`.
+
+Bạn có thể xem file này như service container của dự án:
+
+1. Tải và kiểm tra cấu hình
+2. Khởi tạo infrastructure services
+3. Khởi tạo domain services
+4. Trả về `AppServices` cho transports và MCP registries
+
+Điểm wiring quan trọng:
+
+- Project indexing được khởi tạo thông qua `ProjectRegistryService`
+- Safety controls được áp dụng qua `PathGuard`, command policy, và lock manager
+- Auth và telemetry được gắn một lần ở bootstrap, sau đó tái sử dụng ở mọi nơi
+
+## Luồng request
+
+Với HTTP transport, request đi qua các bước:
+
+1. `src/main/http-server.ts` xác thực request headers khi auth được bật
+2. Auth context được gắn cho bước phân quyền phía sau
+3. MCP transport chuyển call đến handler đã đăng ký
+4. `executeOperation` trong `src/mcp/tools/tool-helpers.ts` chạy RBAC checks và bọc thực thi bằng response envelope
+5. Services thực hiện thao tác và trả về dữ liệu có cấu trúc
+
+Với STDIO transport, luồng tương tự nhưng không có bước xác thực HTTP header.
+
+## Mô hình đăng ký MCP
+
+`src/mcp/server.ts` tạo MCP server và đăng ký:
+
+- Tools từ `src/mcp/tools`
+- Resources từ `src/mcp/resources`
+- Prompts từ `src/mcp/prompts`
+
+Mỗi tool handler nên:
+
+- Validate input bằng zod schemas trong `src/mcp/schemas`
+- Delegate sang service
+- Trả về dữ liệu theo envelope thống nhất
+
+## Project registry và hành vi multi-root
+
+Registry được triển khai tại:
+
+- `src/services/project-registry/project-registry.service.ts`
+- `src/services/project-registry/project-scanner.ts`
+- `src/services/project-registry/registry-store-json.ts`
+
+Hành vi hiện tại:
+
+- Hỗ trợ nhiều roots (`PROJECTS_ROOTS`)
+- Lưu bền roots và discovered projects
+- Hỗ trợ quản lý roots qua CLI:
+  - `coding-mcp init`
+  - `coding-mcp add <folder>`
+  - `coding-mcp remove <folder>`
+
+## Mô hình an toàn
+
+Safety controls được triển khai mặc định ở ranh giới service.
+
+<Warning>
+  Tránh bỏ qua các guard ở service layer khi thêm code mới. Hãy mở rộng thông qua services hiện có và validation schemas.
+</Warning>
+
+Các kiểm soát cốt lõi:
+
+- Chống path traversal và kiểm tra boundary theo project root
+- Bảo vệ protected paths cho thao tác ghi/xóa
+- Confirm flags cho thao tác phá hủy
+- Chỉ cho phép command trong allowlist và kiểm tra args
+- Timeout và giới hạn kích thước output/file
+- Khóa theo project cho thao tác có mutation
+- Audit log cho các mutation trên file
+
+## Auth và RBAC
+
+HTTP deployment có thể yêu cầu API key với quyền theo vai trò.
+
+Vai trò:
+
+- `viewer`: thao tác thiên về đọc
+- `editor`: đọc + phần lớn thao tác ghi/build/test
+- `admin`: toàn bộ thao tác
+
+Phân quyền được áp dụng trong `executeOperation` trước khi gọi service action.
+
+## Telemetry và observability
+
+OpenTelemetry spans được phát khi bật:
+
+- `mcp.http.request`
+- `mcp.tool.{operation}`
+
+Pino logging và audit logs tiếp tục cung cấp trace vận hành cho điều tra sự cố và debug.
+
+## Thao tác file và patch
+
+Lớp file trong `src/services/filesystem/filesystem.service.ts` triển khai:
+
+- Liệt kê thư mục và đọc file
+- Ghi, xóa, di chuyển file an toàn
+- Tìm kiếm nội dung và project tree
+- Đọc resource an toàn cho binary (text hoặc base64 blob)
+
+Hỗ trợ patch trong `src/services/patch` gồm:
+
+- Structured edit operations
+- Parse và apply unified diff hunk
+- Báo xung đột khi hunk không khớp
+
+## Cách thêm tool mới an toàn
+
+<Steps>
+  <Step title="Định nghĩa schema">
+    Thêm validation input trong `src/mcp/schemas`.
+  </Step>
+  <Step title="Triển khai logic service">
+    Thêm hành vi trong module service tại `src/services`.
+  </Step>
+  <Step title="Đăng ký tool handler">
+    Đăng ký ở file phù hợp trong `src/mcp/tools` và gọi `executeOperation`.
+  </Step>
+  <Step title="Thêm tests">
+    Thêm unit và integration coverage cho nhánh thành công và thất bại.
+  </Step>
+  <Step title="Cập nhật tài liệu">
+    Cập nhật docs pages và ví dụ cấu hình cho mọi thay đổi hướng người dùng.
+  </Step>
+</Steps>
+
+## Trang nên đọc tiếp
+
+<CardGroup cols={2}>
+  <Card title="Bắt đầu nhanh" href="/vi/quickstart" icon="rocket">
+    Chạy server local và xác thực thiết lập.
+  </Card>
+  <Card title="Phát triển" href="/vi/development" icon="code">
+    Dùng workflow preview local và lệnh validation.
+  </Card>
+</CardGroup>

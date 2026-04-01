@@ -1,0 +1,36 @@
+---
+title: "Resources và prompts"
+description: "Tham chiếu cho MCP resources và prompt templates hiện có."
+---
+
+## Resources
+
+- `project://index`
+- `project://{project_id}/tree`
+- `project://{project_id}/package-json`
+- `project://{project_id}/readme`
+- `project://{project_id}/git-status`
+- `project://file/{project_id}/{path}`
+- `project://file-meta/{project_id}/{path}`
+
+### Hành vi file resource
+
+- Text files được trả về qua trường `text`
+- Binary files được trả về qua `blob` dạng base64
+- Payload bị giới hạn theo output limits đã cấu hình
+
+## Prompts
+
+- `analyze-project`
+- `implement-task`
+- `explain-file`
+- `generate-commit-message`
+- `review-diff`
+- `fix-test-failures`
+
+Mỗi prompt nhận structured arguments và trả về prompt messages phù hợp cho MCP clients.
+
+## Sơ đồ triển khai
+
+- Resources: `src/mcp/resources/project.resources.ts`
+- Prompts: `src/mcp/prompts/workflow.prompts.ts`
