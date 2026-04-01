@@ -22,8 +22,10 @@ export class ProjectRegistryService {
       this.roots.add(path.resolve(root));
     }
 
-    for (const root of this.scanner.getRoots()) {
-      this.roots.add(path.resolve(root));
+    if (persisted.roots.length === 0) {
+      for (const root of this.scanner.getRoots()) {
+        this.roots.add(path.resolve(root));
+      }
     }
 
     this.scanner.setRoots([...this.roots]);
@@ -93,6 +95,10 @@ export class ProjectRegistryService {
 
   removeRoot(root: string): { roots: string[]; refreshed: number; projects: ProjectMetadata[] } {
     const normalized = path.resolve(root);
+    if (!this.roots.has(normalized)) {
+      throw new NotFoundError("Root folder not found in registry", { root: normalized });
+    }
+
     this.roots.delete(normalized);
     this.scanner.setRoots(this.listRoots());
     const refreshed = this.refresh();
