@@ -21,6 +21,9 @@ export function loadConfig(configPath?: string, overrides?: ConfigOverrides): Ap
     projectsRoots: projectsRootsFromEnv ?? (legacyProjectRoot ? [legacyProjectRoot] : undefined),
     enableHttp: parseBoolean(process.env.ENABLE_HTTP),
     enableStdio: parseBoolean(process.env.ENABLE_STDIO),
+    enableAuth: parseBoolean(process.env.ENABLE_AUTH),
+    authHeaderName: process.env.AUTH_HEADER_NAME,
+    authApiKeys: parseAuthApiKeys(process.env.AUTH_API_KEYS),
     httpHost: process.env.HTTP_HOST,
     httpPort: parseNumber(process.env.HTTP_PORT),
     httpMode: parseHttpMode(process.env.HTTP_MODE),
@@ -133,4 +136,30 @@ function normalizeUserPath(value: string): string {
   }
 
   return path.resolve(trimmed);
+}
+
+function parseAuthApiKeys(value: string | undefined): Array<{ key: string; role: "viewer" | "editor" | "admin"; id: string }> | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const bindings = value
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .map((entry, index) => {
+      const [key, roleRaw, idRaw] = entry.split(":").map((part) => part.trim());
+      const role = roleRaw as "viewer" | "editor" | "admin";
+      if (!key || !role || !["viewer", "editor", "admin"].includes(role)) {
+        throw new ValidationError("Invalid AUTH_API_KEYS entry", { entry });
+      }
+
+      return {
+        key,
+        role,
+        id: idRaw || `key-${index + 1}`
+      };
+    });
+
+  return bindings;
 }

@@ -11,6 +11,7 @@ Production-oriented multi-project MCP server for coding agents, designed to mana
 - MCP tools, resources, and prompts
 - Binary-safe file resource endpoints (text or base64 blob)
 - Shared business core for STDIO and HTTP transports
+- API-key authentication and RBAC for HTTP deployments
 - Structured JSON response envelope with request IDs and timing
 - Audit logging for mutating operations
 
@@ -119,6 +120,9 @@ Key vars:
 - `PROJECTS_ROOTS` (comma-separated list; preferred)
 - `ENABLE_HTTP`
 - `ENABLE_STDIO`
+- `ENABLE_AUTH`
+- `AUTH_HEADER_NAME`
+- `AUTH_API_KEYS` (`key:role:id,key2:role:id2`)
 - `HTTP_HOST`
 - `HTTP_PORT`
 - `MAX_FILE_SIZE`
@@ -151,6 +155,30 @@ The server can discover projects from multiple parent directories.
 1. Set `PROJECTS_ROOTS=/projects,/srv/repos` in environment or config.
 2. Optionally pass repeated `--projects-root` flags in CLI serve mode.
 3. Projects from all configured roots are indexed into one registry.
+
+## HTTP Auth/RBAC
+
+When exposing HTTP transport, enable API-key auth with role-based access control.
+
+Example:
+
+```bash
+ENABLE_AUTH=true
+AUTH_HEADER_NAME=x-api-key
+AUTH_API_KEYS=viewer-key:viewer:viewer1,editor-key:editor:editor1,admin-key:admin:admin1
+```
+
+Request header:
+
+```http
+x-api-key: editor-key
+```
+
+Role model:
+
+- `viewer`: read-only operations
+- `editor`: read + non-destructive write/build/test workflows
+- `admin`: full access including destructive operations
 
 ## Example MCP Client Config
 
@@ -215,7 +243,6 @@ npm test
 
 1. Full hunk-level unified diff patch application engine
 2. OpenTelemetry export hooks
-3. Auth/RBAC for exposed HTTP deployments
 
 ## License
 MIT License

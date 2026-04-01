@@ -1,6 +1,8 @@
 import { createServer } from "node:http";
 import type { AppServices } from "./bootstrap.js";
 import { createMcpServer } from "../mcp/server.js";
+import { runWithAuthContext } from "../services/auth/auth-context.js";
+import { SecurityError } from "../core/errors.js";
 
 export async function startHttpServer(services: AppServices): Promise<void> {
   if (!services.config.enableHttp) {
@@ -15,8 +17,25 @@ export async function startHttpServer(services: AppServices): Promise<void> {
 
   const httpServer = createServer(async (req, res) => {
     try {
-      await transport.handleRequest(req, res);
+      const auth = services.authz.authenticateHttpRequest(req.headers);
+      await runWithAuthContext(auth, async () => {
+        await transport.handleRequest(req, res);
+      });
     } catch (error) {
+      if (services.authz.enabled && error instanceof SecurityError) {
+        const message = error instanceof Error ? error.message : "Unauthorized";
+        res.statusCode = 401;
+        res.setHeader("content-type", "application/json");
+        res.end(
+          JSON.stringify({
+            ok: false,
+            error_code: "UNAUTHORIZED",
+            message
+          })
+        );
+        return;
+      }
+
       services.logger.error({ error }, "Failed to handle MCP HTTP request");
       res.statusCode = 500;
       res.end("internal error");

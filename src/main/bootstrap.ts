@@ -16,6 +16,7 @@ import { GitService } from "../services/git/git.service.js";
 import { CommandPolicy } from "../services/commands/command-policy.js";
 import { CommandRunnerService } from "../services/commands/command-runner.service.js";
 import type { ConfigOverrides } from "../config/load-config.js";
+import { AuthzService } from "../services/auth/authz.service.js";
 
 export interface AppServices {
   config: ReturnType<typeof loadConfig>;
@@ -27,6 +28,7 @@ export interface AppServices {
   patch: PatchService;
   git: GitService;
   commands: CommandRunnerService;
+  authz: AuthzService;
   createContext: (operation: string, projectId?: string) => RequestContext;
 }
 
@@ -54,6 +56,11 @@ export function bootstrap(configPath?: string, overrides?: ConfigOverrides): App
   });
 
   const commands = new CommandRunnerService(new CommandPolicy({ allowedCommands: config.allowedCommands }));
+  const authz = new AuthzService({
+    enabled: config.enableAuth,
+    headerName: config.authHeaderName,
+    apiKeys: config.authApiKeys
+  });
 
   return {
     config,
@@ -65,6 +72,7 @@ export function bootstrap(configPath?: string, overrides?: ConfigOverrides): App
     patch,
     git,
     commands,
+    authz,
     createContext(operation: string, projectId?: string): RequestContext {
       return {
         requestId: crypto.randomUUID(),
