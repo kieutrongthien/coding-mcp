@@ -54,6 +54,7 @@ jobs:
           whats_new=()
           whats_changed=()
           declare -A seen_subjects=()
+          prefix_regex='^(feat|enhancement|breaking-change)(\([^)]*\))?(!)?:[[:space:]]+'
 
           for subject in "${commits[@]}"; do
             [[ -z "$subject" ]] && continue
@@ -62,7 +63,7 @@ jobs:
             fi
             seen_subjects[$subject]=1
 
-            if [[ "$subject" =~ ^(feat|enhancement|breaking-change)(\([^)]*\))?(!)?:[[:space:]]+ ]]; then
+            if [[ "$subject" =~ $prefix_regex ]]; then
               whats_new+=("$subject")
             else
               whats_changed+=("$subject")
