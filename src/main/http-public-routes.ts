@@ -51,7 +51,9 @@ export function createPublicRouteHandler(deps: PublicRouteDeps) {
         ok: true,
         status: "ready",
         projects_count: services.projectRegistry.listProjects().length,
-        uptime_s: Math.floor((Date.now() - startedAt) / 1000)
+        uptime_s: Math.floor((Date.now() - startedAt) / 1000),
+        http_mode: services.config.httpMode,
+        auth_enabled: services.authz.enabled
       });
       return true;
     }
