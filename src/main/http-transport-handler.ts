@@ -44,27 +44,15 @@ export function createAuthenticatedTransportHandler(deps: AuthenticatedTransport
             // Compatibility: some clients send streamable traffic to /mcp or /sse.
             // Normalize to root so StreamableHTTP transport can process it uniformly.
             const originalUrl = req.url;
-            const originalProtocolVersion = req.headers["mcp-protocol-version"];
             const isAliasPath = streamableAliases.has(parsedUrl.pathname);
             if (isAliasPath && parsedUrl.pathname !== "/") {
               req.url = `/${parsedUrl.search}`;
-            }
-
-            // Compatibility: some clients (including Dify's httpx-based connector)
-            // omit MCP-Protocol-Version on data requests, which the SDK may reject.
-            if (!req.headers["mcp-protocol-version"]) {
-              req.headers["mcp-protocol-version"] = "2025-11-25";
             }
 
             try {
               await streamableTransport.handleRequest(req, res);
             } finally {
               req.url = originalUrl;
-              if (originalProtocolVersion === undefined) {
-                delete req.headers["mcp-protocol-version"];
-              } else {
-                req.headers["mcp-protocol-version"] = originalProtocolVersion;
-              }
             }
             return;
           }
