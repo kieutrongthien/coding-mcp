@@ -138,7 +138,8 @@ function ensureParentDir(filePath: string): void {
 async function createStreamableTransport() {
   const streamableModule = await import("@modelcontextprotocol/sdk/server/streamableHttp.js");
   return new streamableModule.StreamableHTTPServerTransport({
-    // Stateful mode is required when reusing a transport instance across requests.
-    sessionIdGenerator: () => crypto.randomUUID()
+    // Use stateless mode for broader client compatibility (e.g. Dify).
+    // In this mode, Mcp-Session-Id is not required on follow-up requests.
+    sessionIdGenerator: undefined
   });
 }
