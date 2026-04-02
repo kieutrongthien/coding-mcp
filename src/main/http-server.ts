@@ -17,7 +17,7 @@ export async function startHttpServer(services: AppServices): Promise<void> {
 
   const server = createMcpServer(services);
   const streamableTransport =
-    services.config.httpMode === "streamable" ? await createStreamableTransport(services) : undefined;
+    services.config.httpMode === "streamable" ? await createStreamableTransport() : undefined;
   const sseModule = services.config.httpMode === "sse" ? await import("@modelcontextprotocol/sdk/server/sse.js") : undefined;
   const startedAt = Date.now();
   const metrics = new HttpMetrics();
@@ -135,15 +135,11 @@ function ensureParentDir(filePath: string): void {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
 }
 
-async function createStreamableTransport(services: AppServices) {
+async function createStreamableTransport() {
   const streamableModule = await import("@modelcontextprotocol/sdk/server/streamableHttp.js");
-  const transport = new streamableModule.StreamableHTTPServerTransport({
+  return new streamableModule.StreamableHTTPServerTransport({
     // Use stateless mode for broader client compatibility (e.g. Dify).
     // In this mode, Mcp-Session-Id is not required on follow-up requests.
     sessionIdGenerator: undefined
   });
-  transport.onerror = (error: Error) => {
-    services.logger.warn({ error }, "Streamable transport rejected request");
-  };
-  return transport;
 }
