@@ -140,10 +140,7 @@ async function createStreamableTransport(services: AppServices) {
   const transport = new streamableModule.StreamableHTTPServerTransport({
     // Use stateless mode for broader client compatibility (e.g. Dify).
     // In this mode, Mcp-Session-Id is not required on follow-up requests.
-    sessionIdGenerator: undefined,
-    // Prefer plain JSON responses when possible for clients that do not
-    // maintain long-lived SSE streams reliably.
-    enableJsonResponse: true
+    sessionIdGenerator: undefined
   });
   transport.onerror = (error: Error) => {
     services.logger.warn({ error }, "Streamable transport rejected request");

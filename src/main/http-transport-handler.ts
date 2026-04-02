@@ -51,6 +51,23 @@ export function createAuthenticatedTransportHandler(deps: AuthenticatedTransport
 
             try {
               await streamableTransport.handleRequest(req, res);
+            } catch (error) {
+              services.logger.warn({ error }, "Streamable transport threw while handling request");
+              if (!res.headersSent) {
+                res.statusCode = 400;
+                res.setHeader("content-type", "application/json");
+                res.end(
+                  JSON.stringify({
+                    jsonrpc: "2.0",
+                    error: {
+                      code: -32000,
+                      message: "Bad Request: Streamable request rejected"
+                    },
+                    id: null
+                  })
+                );
+              }
+              return;
             } finally {
               req.url = originalUrl;
             }
