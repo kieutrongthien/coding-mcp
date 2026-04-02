@@ -17,6 +17,7 @@ export interface AuthenticatedTransportDeps {
 export function createAuthenticatedTransportHandler(deps: AuthenticatedTransportDeps) {
   const { services, streamableTransport, sseModule } = deps;
   const sseTransports = new Map<string, unknown>();
+  const streamableAliases = new Set(["/", "/mcp", "/sse"]);
 
   return async function handleAuthenticatedTransport(
     req: IncomingMessage,
@@ -39,7 +40,20 @@ export function createAuthenticatedTransportHandler(deps: AuthenticatedTransport
             if (!streamableTransport) {
               throw new Error("Streamable transport not initialized");
             }
-            await streamableTransport.handleRequest(req, res);
+
+            // Compatibility: some clients send streamable traffic to /mcp or /sse.
+            // Normalize to root so StreamableHTTP transport can process it uniformly.
+            const originalUrl = req.url;
+            const isAliasPath = streamableAliases.has(parsedUrl.pathname);
+            if (isAliasPath && parsedUrl.pathname !== "/") {
+              req.url = `/${parsedUrl.search}`;
+            }
+
+            try {
+              await streamableTransport.handleRequest(req, res);
+            } finally {
+              req.url = originalUrl;
+            }
             return;
           }
 
