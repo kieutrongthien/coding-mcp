@@ -8,6 +8,7 @@ import { runWithAuthContext } from "../services/auth/auth-context.js";
 import { SecurityError } from "../core/errors.js";
 import { HttpMetrics } from "../core/http-metrics.js";
 import { isSseMessagePath } from "./http-routes.js";
+import { handlePublicAuthEndpoints } from "./http-oauth.js";
 
 export async function startHttpServer(services: AppServices): Promise<void> {
   if (!services.config.enableHttp) {
@@ -17,7 +18,7 @@ export async function startHttpServer(services: AppServices): Promise<void> {
 
   const streamableTransports = new Map<string, StreamableTransport>();
   const sseModule = services.config.httpMode === "sse" ? await import("@modelcontextprotocol/sdk/server/sse.js") : undefined;
-  const sseTransports = new Map<string, unknown>();
+  const sseTransports = new Map<string, SseMessageTransport>();
   const startedAt = Date.now();
   const metrics = new HttpMetrics();
   ensureParentDir(services.config.httpRequestLogFile);
@@ -61,7 +62,7 @@ export async function startHttpServer(services: AppServices): Promise<void> {
       });
     });
 
-    if (await handlePublicAuthEndpoints(services, req, res, parsedUrl)) {
+    if (await handlePublicAuthEndpoints({ services, req, res, parsedUrl, sendJson, getRequestBaseUrl })) {
       return;
     }
 
@@ -112,104 +113,6 @@ export async function startHttpServer(services: AppServices): Promise<void> {
   });
 }
 
-async function handlePublicAuthEndpoints(
-  services: AppServices,
-  req: IncomingMessage,
-  res: ServerResponse,
-  parsedUrl: URL
-): Promise<boolean> {
-  if (!services.authz.enabled) {
-    return false;
-  }
-
-  if (req.method === "GET" && parsedUrl.pathname === "/.well-known/oauth-protected-resource") {
-    const baseUrl = getRequestBaseUrl(req);
-    sendJson(
-      res,
-      200,
-      {
-        resource: baseUrl,
-        authorization_servers: [baseUrl],
-        resource_name: "Coding MCP Server"
-      },
-      { "access-control-allow-origin": "*" }
-    );
-    return true;
-  }
-
-  if (req.method === "GET" && parsedUrl.pathname === "/.well-known/oauth-authorization-server") {
-    const baseUrl = getRequestBaseUrl(req);
-    sendJson(
-      res,
-      200,
-      {
-        issuer: baseUrl,
-        token_endpoint: `${baseUrl}/oauth/token`,
-        registration_endpoint: `${baseUrl}/oauth/register`,
-        grant_types_supported: ["client_credentials"],
-        token_endpoint_auth_methods_supported: ["client_secret_post", "client_secret_basic"],
-        response_types_supported: [],
-        scopes_supported: ["read", "write", "admin"],
-        code_challenge_methods_supported: ["S256"]
-      },
-      { "access-control-allow-origin": "*" }
-    );
-    return true;
-  }
-
-  if (req.method === "POST" && parsedUrl.pathname === "/oauth/token") {
-    const params = new URLSearchParams(await readRequestBody(req, 4096));
-    if (params.get("grant_type") !== "client_credentials") {
-      sendJson(res, 400, { error: "unsupported_grant_type" });
-      return true;
-    }
-
-    const clientSecret = resolveOAuthClientSecret(params, req.headers["authorization"]);
-    if (!clientSecret) {
-      sendJson(res, 401, { error: "invalid_client" });
-      return true;
-    }
-
-    const binding = services.authz.lookupApiKey(clientSecret);
-    if (!binding) {
-      sendJson(res, 401, { error: "invalid_client" });
-      return true;
-    }
-
-    sendJson(
-      res,
-      200,
-      {
-        access_token: clientSecret,
-        token_type: "bearer",
-        expires_in: 3600 * 24 * 365
-      },
-      { "cache-control": "no-store" }
-    );
-    return true;
-  }
-
-  if (req.method === "POST" && parsedUrl.pathname === "/oauth/register") {
-    const registrationKey = extractBearerToken(req.headers["authorization"]);
-    const binding = registrationKey ? services.authz.lookupApiKey(registrationKey) : null;
-    if (!binding || !registrationKey) {
-      sendJson(res, 401, { error: "unauthorized" });
-      return true;
-    }
-
-    sendJson(res, 201, {
-      client_id: binding.id,
-      client_secret: registrationKey,
-      client_id_issued_at: Math.floor(Date.now() / 1000),
-      grant_types: ["client_credentials"],
-      token_endpoint_auth_method: "client_secret_post"
-    });
-    return true;
-  }
-
-  return false;
-}
-
 function handleProbeEndpoints(
   services: AppServices,
   req: IncomingMessage,
@@ -255,7 +158,7 @@ async function handleMcpTransportRequest(input: {
   parsedUrl: URL;
   streamableTransports: Map<string, StreamableTransport>;
   sseModule: Awaited<typeof import("@modelcontextprotocol/sdk/server/sse.js")> | undefined;
-  sseTransports: Map<string, unknown>;
+  sseTransports: Map<string, SseMessageTransport>;
 }): Promise<void> {
   const { services, req, res, parsedUrl, streamableTransports, sseModule, sseTransports } = input;
 
@@ -306,7 +209,7 @@ async function handleSseRequest(
   res: ServerResponse,
   parsedUrl: URL,
   sseModule: Awaited<typeof import("@modelcontextprotocol/sdk/server/sse.js")>,
-  sseTransports: Map<string, unknown>
+  sseTransports: Map<string, SseMessageTransport>
 ): Promise<boolean> {
   if (req.method === "GET" && parsedUrl.pathname === "/sse") {
     const transport = new sseModule.SSEServerTransport("/sse", res);
@@ -339,11 +242,7 @@ async function handleSseRequest(
     return true;
   }
 
-  await (transport as { handlePostMessage: (req: unknown, res: unknown, parsedBody?: unknown) => Promise<void> }).handlePostMessage(
-    req,
-    res,
-    undefined
-  );
+  await transport.handlePostMessage(req, res, undefined);
   return true;
 }
 
@@ -367,45 +266,6 @@ function handleRequestError(services: AppServices, req: IncomingMessage, res: Se
   services.logger.error({ error }, "Failed to handle MCP HTTP request");
   res.statusCode = 500;
   res.end("internal error");
-}
-
-async function readRequestBody(req: IncomingMessage, maxBytes: number): Promise<string> {
-  let body = "";
-  for await (const chunk of req) {
-    body += chunk as string;
-    if (body.length > maxBytes) {
-      break;
-    }
-  }
-  return body;
-}
-
-function resolveOAuthClientSecret(params: URLSearchParams, authorizationHeader: string | string[] | undefined): string | null {
-  const secretFromBody = params.get("client_secret");
-  if (secretFromBody) {
-    return secretFromBody;
-  }
-
-  const authHeaderValue = readSingleHeaderValue(authorizationHeader);
-  if (!authHeaderValue || !authHeaderValue.toLowerCase().startsWith("basic ")) {
-    return null;
-  }
-
-  const decoded = Buffer.from(authHeaderValue.slice(6), "base64").toString("utf8");
-  const separatorIndex = decoded.indexOf(":");
-  if (separatorIndex === -1) {
-    return null;
-  }
-
-  return decoded.slice(separatorIndex + 1);
-}
-
-function extractBearerToken(authorizationHeader: string | string[] | undefined): string | null {
-  const authHeaderValue = readSingleHeaderValue(authorizationHeader);
-  if (!authHeaderValue || !authHeaderValue.toLowerCase().startsWith("bearer ")) {
-    return null;
-  }
-  return authHeaderValue.slice(7).trim();
 }
 
 function sendJson(
@@ -439,6 +299,10 @@ function ensureParentDir(filePath: string): void {
 
 type StreamableTransport = {
   handleRequest: (req: IncomingMessage, res: ServerResponse, parsedBody?: unknown) => Promise<void>;
+};
+
+type SseMessageTransport = {
+  handlePostMessage: (req: IncomingMessage, res: ServerResponse, parsedBody?: unknown) => Promise<void>;
 };
 
 async function createConnectedStreamableTransport(
