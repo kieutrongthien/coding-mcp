@@ -1,9 +1,0 @@
-{
-	"servers": {
-		"my-mcp-server-83dd78da": {
-			"url": "http://127.0.0.1:3000",
-			"type": "http"
-		}
-	},
-	"inputs": []
-}

@@ -70,6 +70,19 @@ export class AuthzService {
       return { apiKeyId: "anonymous", role: "admin" };
     }
 
+    // Support OAuth 2.0 Bearer token (RFC 6750) in addition to the custom header.
+    // The access_token issued by /oauth/token is the API key itself.
+    const authorization = headers["authorization"];
+    const authValue = Array.isArray(authorization) ? authorization[0] : authorization;
+    if (authValue && authValue.toLowerCase().startsWith("bearer ")) {
+      const bearerKey = authValue.slice(7).trim();
+      const bearerBinding = this.keyMap.get(bearerKey);
+      if (!bearerBinding) {
+        throw new SecurityError("Invalid Bearer token", {});
+      }
+      return { apiKeyId: bearerBinding.id, role: bearerBinding.role };
+    }
+
     const headerLookup = this.options.headerName.toLowerCase();
     const apiKey = headers[headerLookup] ?? headers[this.options.headerName];
     const value = Array.isArray(apiKey) ? apiKey[0] : apiKey;
@@ -91,6 +104,14 @@ export class AuthzService {
       apiKeyId: binding.id,
       role: binding.role
     };
+  }
+
+  /**
+   * Validates an API key and returns its binding, or null if invalid.
+   * Used by the OAuth token endpoint.
+   */
+  lookupApiKey(key: string): ApiKeyBinding | null {
+    return this.keyMap.get(key) ?? null;
   }
 
   authorizeOperation(operation: string, role: AuthRole): void {
