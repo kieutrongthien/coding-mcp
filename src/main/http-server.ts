@@ -15,17 +15,11 @@ export async function startHttpServer(services: AppServices): Promise<void> {
     return;
   }
 
-  const server = createMcpServer(services);
-  const streamableTransport =
-    services.config.httpMode === "streamable" ? await createStreamableTransport() : undefined;
+  const streamableTransports = new Map<string, StreamableTransport>();
   const sseModule = services.config.httpMode === "sse" ? await import("@modelcontextprotocol/sdk/server/sse.js") : undefined;
   const sseTransports = new Map<string, unknown>();
   const startedAt = Date.now();
   const metrics = new HttpMetrics();
-
-  if (streamableTransport) {
-    await server.connect(streamableTransport);
-  }
   ensureParentDir(services.config.httpRequestLogFile);
 
   const httpServer = createServer(async (req, res) => {
@@ -247,11 +241,22 @@ export async function startHttpServer(services: AppServices): Promise<void> {
         async () =>
           await runWithAuthContext(auth, async () => {
             if (services.config.httpMode === "streamable") {
-              if (!streamableTransport) {
-                throw new Error("Streamable transport not initialized");
+              const sessionId = readSingleHeaderValue(req.headers["mcp-session-id"]);
+
+              if (sessionId) {
+                const existingTransport = streamableTransports.get(sessionId);
+                if (!existingTransport) {
+                  res.statusCode = 404;
+                  res.end("Session not found");
+                  return;
+                }
+
+                await existingTransport.handleRequest(req, res);
+                return;
               }
 
-              await streamableTransport.handleRequest(req, res);
+              const newTransport = await createConnectedStreamableTransport(services, streamableTransports);
+              await newTransport.handleRequest(req, res);
               return;
             }
 
@@ -352,12 +357,52 @@ function ensureParentDir(filePath: string): void {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
 }
 
-async function createStreamableTransport() {
-  const streamableModule = await import("@modelcontextprotocol/sdk/server/streamableHttp.js");
-  return new streamableModule.StreamableHTTPServerTransport({
-    // Stateful mode is required when reusing a transport instance across requests.
-    sessionIdGenerator: () => crypto.randomUUID()
+type StreamableTransport = {
+  handleRequest: (req: import("node:http").IncomingMessage, res: import("node:http").ServerResponse, parsedBody?: unknown) => Promise<void>;
+};
+
+async function createConnectedStreamableTransport(
+  services: AppServices,
+  transportsBySessionId: Map<string, StreamableTransport>
+): Promise<StreamableTransport> {
+  const transport = await createStreamableTransportWithHooks({
+    onSessionInitialized: (sessionId, initializedTransport) => {
+      transportsBySessionId.set(sessionId, initializedTransport);
+    },
+    onSessionClosed: (sessionId) => {
+      transportsBySessionId.delete(sessionId);
+    }
   });
+  const server = createMcpServer(services);
+  await server.connect(transport as never);
+  return transport;
+}
+
+async function createStreamableTransportWithHooks(options?: {
+  onSessionInitialized?: (sessionId: string, transport: StreamableTransport) => void;
+  onSessionClosed?: (sessionId: string) => void;
+}): Promise<StreamableTransport> {
+  const streamableModule = await import("@modelcontextprotocol/sdk/server/streamableHttp.js");
+  const transport: StreamableTransport = new streamableModule.StreamableHTTPServerTransport({
+    // Stateful mode is required when reusing a transport instance across requests.
+    sessionIdGenerator: () => crypto.randomUUID(),
+    onsessioninitialized: (sessionId: string) => {
+      options?.onSessionInitialized?.(sessionId, transport);
+    },
+    onsessionclosed: (sessionId: string) => {
+      options?.onSessionClosed?.(sessionId);
+    }
+  });
+
+  return transport;
+}
+
+function readSingleHeaderValue(value: string | string[] | undefined): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  return Array.isArray(value) ? value[0] : value;
 }
 
 /**
