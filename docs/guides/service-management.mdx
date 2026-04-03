@@ -1,0 +1,111 @@
+---
+title: "Run as a service"
+description: "Run coding-mcp as a managed service with Systemd or PM2."
+---
+
+Use this guide when you want `coding-mcp` to run continuously and restart automatically after host reboots or process failures.
+
+## Prerequisites
+
+- Linux host with Node.js 20 or newer
+- `coding-mcp` installed globally or available in your runtime path
+- A dedicated service user (recommended)
+
+## Option 1: Systemd
+
+Create a unit file at `/etc/systemd/system/coding-mcp.service`:
+
+```ini
+[Unit]
+Description=Coding MCP Service
+After=network.target
+
+[Service]
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+Environment=NODE_VERSION=v22.21.1
+Environment=PATH=/home/ubuntu/.nvm/versions/node/v22.22.2/bin:/usr/local/bin:/usr/bin:/bin
+Environment=HOME=/home/ubuntu
+Environment=ENABLE_AUTH=true
+Environment=AUTH_API_KEYS=XXXXXXXXXXXXXXXXXXXXXXXXXX:admin:admin01
+
+User=ubuntu
+Group=ubuntu
+ExecStart=/home/ubuntu/.nvm/versions/node/v22.22.2/bin/node /home/ubuntu/.nvm/versions/node/v22.22.2/bin/coding-mcp serve --port 4848
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Reload and enable the service:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now coding-mcp
+```
+
+Check status and logs:
+
+```bash
+sudo systemctl status coding-mcp
+sudo journalctl -u coding-mcp -f
+```
+
+<Warning>
+  Keep `AUTH_API_KEYS` out of version control. Store secrets with environment files or your secret manager.
+</Warning>
+
+## Option 2: PM2
+
+Install PM2 globally:
+
+```bash
+npm install -g pm2
+```
+
+Create an ecosystem file (for example `ecosystem.config.cjs`):
+
+```js
+module.exports = {
+  apps: [
+    {
+      name: "coding-mcp",
+      script: "coding-mcp",
+      args: "serve --port 4848",
+      autorestart: true,
+      env: {
+        ENABLE_AUTH: "true",
+        AUTH_API_KEYS: "XXXXXXXXXXXXXXXXXXXXXXXXXX:admin:admin01"
+      }
+    }
+  ]
+};
+```
+
+Start from the ecosystem file:
+
+```bash
+pm2 start ecosystem.config.cjs
+```
+
+Persist across reboots:
+
+```bash
+pm2 save
+pm2 startup
+```
+
+Inspect process and logs:
+
+```bash
+pm2 status coding-mcp
+pm2 logs coding-mcp
+```
+
+## Which one should you use?
+
+- Use Systemd if you want native Linux service management and journald integration.
+- Use PM2 if you already manage Node.js processes with PM2 and need fast process-level controls.

@@ -37,6 +37,7 @@
                   "guides/configuration",
                   "guides/use-cases",
                   "guides/cli-and-registry",
+                  "guides/service-management",
                   "guides/security-rbac"
                 ]
               }
@@ -85,6 +86,7 @@
                   "vi/guides/configuration",
                   "vi/guides/use-cases",
                   "vi/guides/cli-and-registry",
+                  "vi/guides/service-management",
                   "vi/guides/security-rbac"
                 ]
               }

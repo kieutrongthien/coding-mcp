@@ -1,0 +1,111 @@
+---
+title: "Chạy dưới dạng dịch vụ"
+description: "Chạy coding-mcp như một dịch vụ được quản lý bằng Systemd hoặc PM2."
+---
+
+Dùng hướng dẫn này khi bạn muốn `coding-mcp` chạy liên tục và tự khởi động lại sau khi máy reboot hoặc khi process bị lỗi.
+
+## Điều kiện cần
+
+- Máy Linux với Node.js 20 trở lên
+- `coding-mcp` đã được cài global hoặc có sẵn trong runtime path
+- Một user riêng cho dịch vụ (khuyến nghị)
+
+## Cách 1: Systemd
+
+Tạo unit file tại `/etc/systemd/system/coding-mcp.service`:
+
+```ini
+[Unit]
+Description=Coding MCP Service
+After=network.target
+
+[Service]
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+Environment=NODE_VERSION=v22.21.1
+Environment=PATH=/home/ubuntu/.nvm/versions/node/v22.22.2/bin:/usr/local/bin:/usr/bin:/bin
+Environment=HOME=/home/ubuntu
+Environment=ENABLE_AUTH=true
+Environment=AUTH_API_KEYS=XXXXXXXXXXXXXXXXXXXXXXXXXX:admin:admin01
+
+User=ubuntu
+Group=ubuntu
+ExecStart=/home/ubuntu/.nvm/versions/node/v22.22.2/bin/node /home/ubuntu/.nvm/versions/node/v22.22.2/bin/coding-mcp serve --port 4848
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Reload và bật service:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now coding-mcp
+```
+
+Kiểm tra trạng thái và log:
+
+```bash
+sudo systemctl status coding-mcp
+sudo journalctl -u coding-mcp -f
+```
+
+<Warning>
+  Không lưu `AUTH_API_KEYS` trong source control. Hãy dùng file môi trường hoặc secret manager.
+</Warning>
+
+## Cách 2: PM2
+
+Cài PM2 global:
+
+```bash
+npm install -g pm2
+```
+
+Tạo file ecosystem (ví dụ `ecosystem.config.cjs`):
+
+```js
+module.exports = {
+  apps: [
+    {
+      name: "coding-mcp",
+      script: "coding-mcp",
+      args: "serve --port 4848",
+      autorestart: true,
+      env: {
+        ENABLE_AUTH: "true",
+        AUTH_API_KEYS: "XXXXXXXXXXXXXXXXXXXXXXXXXX:admin:admin01"
+      }
+    }
+  ]
+};
+```
+
+Chạy bằng ecosystem file:
+
+```bash
+pm2 start ecosystem.config.cjs
+```
+
+Lưu trạng thái để tự chạy sau reboot:
+
+```bash
+pm2 save
+pm2 startup
+```
+
+Kiểm tra process và log:
+
+```bash
+pm2 status coding-mcp
+pm2 logs coding-mcp
+```
+
+## Nên chọn cách nào?
+
+- Dùng Systemd nếu bạn muốn quản lý service theo chuẩn Linux và tích hợp journald.
+- Dùng PM2 nếu bạn đã quản lý process Node.js bằng PM2 và muốn thao tác nhanh ở cấp process.

@@ -8,22 +8,22 @@ description: "MCP server that lets AI agents perform coding tasks on remote repo
 Deploy the server once on the machine that holds your code. Any MCP-compatible agent — Claude, Cursor, or any HTTP-capable client — connects to it and immediately has access to file operations, git, search, build, and test tools across all indexed projects.
 
 ```
-┌─────────────────────────────────────────────┐
+┌──────────────────────────────────────────────┐
 │  AI Agent (Claude / Cursor / any MCP client) │
-└────────────────┬────────────────────────────┘
+└────────────────┬─────────────────────────────┘
                  │  MCP over HTTP or STDIO
                  ▼
-┌─────────────────────────────────────────────┐
+┌──────────────────────────────────────────────┐
 │           coding-mcp server                  │
 │  (runs on the machine with your repos)       │
 │                                              │
 │  Tools: files · git · search · commands      │
 │  Resources: project index · file content     │
 │  Prompts: implement · review · fix tests     │
-└──────────────────┬──────────────────────────┘
+└──────────────────┬───────────────────────────┘
                    │  filesystem + git
                    ▼
-        /projects/repo-a  /projects/repo-b  …
+    /projects/repo-a  /projects/repo-b  …
 ```
 
 <CardGroup cols={2}>

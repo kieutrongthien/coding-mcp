@@ -9,22 +9,22 @@ Production-ready MCP server that lets AI agents perform coding tasks on remote r
 **Primary goal:** deploy one server on a machine that hosts your code, then connect any MCP-compatible agent (Claude, Cursor, etc.) to it. The agent can browse files, edit code, run builds and tests, manage git, and more — all through structured MCP tool calls.
 
 ```
-┌─────────────────────────────────────────────┐
+┌──────────────────────────────────────────────┐
 │  AI Agent (Claude / Cursor / any MCP client) │
-└────────────────┬────────────────────────────┘
+└────────────────┬─────────────────────────────┘
                  │  MCP over HTTP or STDIO
                  ▼
-┌─────────────────────────────────────────────┐
+┌──────────────────────────────────────────────┐
 │           coding-mcp server                  │
 │  (runs on the machine with your repos)       │
 │                                              │
 │  Tools: files · git · search · commands      │
 │  Resources: project index · file content     │
 │  Prompts: implement · review · fix tests     │
-└──────────────────┬──────────────────────────┘
+└──────────────────┬───────────────────────────┘
                    │  filesystem + git
                    ▼
-        /projects/repo-a  /projects/repo-b  …
+      /projects/repo-a  /projects/repo-b  …
 ```
 
 ## Documentation
